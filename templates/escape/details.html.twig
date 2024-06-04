@@ -1,0 +1,107 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Details Escape{% endblock %}
+
+{% block body %}
+<div id="escape-details" class="container">
+    <section id="nav">
+        <a class="button-action" href='{{ path("admin_escapes_list") }}'>Retour à la liste</a>
+    </section>
+    <section id="sort">
+        <h1>{{ escape.name }} <span>{{ escape.id }}</span></h1>
+        <div class="actions">
+            <a class="button-modify" href='{{ path("admin_escapes_informations_edit", {id: escape.id}) }}'>Modifier</a>
+            <a class="button-delete" href='{{ path("admin_escapes_informations_delete", {id: escape.id}) }}'>Supprimer</a>
+            <a class="button-action" href='{{ path("admin_escapes_description_add", {id: escape.id}) }}'>Ajouter une description</a>
+            <a class="button-action" href='{{ path("admin_escapes_link_add", {id: escape.id}) }}'>Ajouter un lien</a>
+        </div>
+        <div class="list-button">
+            {% for entreprise in escape.entreprises %}
+                <div class="city">{{ entreprise.name }}</div>
+            {% endfor %}
+        </div>
+        {% if escape.cities|length > 1 %}
+        <div class="list-button">
+            {% for city in escape.cities %}
+                <a class="link" href='{{ path("admin_escapes_one", {id: escape.id, city: city.id}) }}'>{{ city.name }}</a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="city">{{ escape.cities[0].name }}</div>
+        {% endif %}
+    </section>
+    <section id="informations">
+        {% if citySelected is not null %}
+        <div class="city">{{ citySelected.name }}</div>
+        {% endif %}
+        <h2>Informations Globales</h2>
+        <div class="global">
+            <div class="info"><h3>Jouable</h3>
+                {% if escape.actual is same as(true) %}
+                <div>Oui</div>
+                {% else %}
+                <div>Non</div>
+                {% endif %}
+            </div>
+            <div class="info"><h3>Temps</h3><div>{{ escape.time }} min</div></div>
+            <div class="info"><h3>Joueureuses</h3><div>{{ escape.minPlayer }} à {{ escape.maxPlayer }}</div></div>
+            <div class="info"><h3>Niveau</h3><div>{{ escape.level }}</div></div>
+            <div class="info"><h3>Prix</h3><div>~ {{ escape.price }} euros</div></div>
+            <div class="info"><h3>Age</h3><div>+ {{ escape.age }} ans</div></div>
+        </div>
+        <h2>Tags</h2>
+        <div class="list-button">
+            {% for tag in escape.tags %}
+            <div>{{ tag.name }}</div>
+            {% endfor %}
+        </div>
+        {% if citySelected is not null %}
+            <h2>Description</h2>
+            {% for description in escape.descriptions %}
+                {% if description.city.id is same as(citySelected.id) %}
+                <div class="description">
+                    <div class="text">{{ description.entreprise.name }} = {{ description.description }}</div>
+                    <div class="actions">
+                        <a class="button-modify" href='{{ path("admin_escapes_description_edit", {id: description.id}) }}'>Modifier</a>
+                        <a class="button-delete" href='{{ path("admin_escapes_description_delete", {id: description.id}) }}'>Supprimer</a>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+            <h2>Lien</h2>
+            {% for link in escape.links %}
+                {% if link.city.id is same as(citySelected.id) %}
+                <div class="description">
+                    <a class="text" href="{{ link.link }}" target="_blank">{{ link.entreprise.name }} = {{ link.link }}</a>
+                    <div class="actions">
+                        <a class="button-modify" href='{{ path("admin_escapes_link_edit", {id: link.id}) }}'>Modifier</a>
+                        <a class="button-delete" href='{{ path("admin_escapes_link_delete", {id: link.id}) }}'>Supprimer</a>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <h2>Descriptions</h2>
+            {% for description in escape.descriptions %}
+                <div class="description">
+                    <div class="text">{{ description.city.name }} / {{ description.entreprise.name }} =  {{ description.description }}</div>
+                    <div class="actions">
+                        <a class="button-modify" href='{{ path("admin_escapes_description_edit", {id: description.id}) }}'>Modifier</a>
+                        <a class="button-delete" href='{{ path("admin_escapes_description_delete", {id: description.id}) }}'>Supprimer</a>
+                    </div>
+                </div>
+            {% endfor %}
+            <h2>Liens</h2>
+            {% for link in escape.links %}
+                <div class="description">
+                    <a class="text" href="{{ link.link }}" target="_blank">{{ link.city.name }} / {{ link.entreprise.name }} = {{ link.link }}</a>
+                    <div class="actions">
+                        <a class="button-modify" href='{{ path("admin_escapes_link_edit", {id: link.id}) }}'>Modifier</a>
+                        <a class="button-delete" href='{{ path("admin_escapes_link_delete", {id: link.id}) }}'>Supprimer</a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

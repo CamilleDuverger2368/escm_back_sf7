@@ -1,0 +1,9 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Accueil Admin{% endblock %}
+
+{% block body %}
+<section id="admin-homepage">
+    <a class="button-action" href='{{ path("admin_escapes_list") }}'>Liste des escapes</a>
+</section>    
+{% endblock %}

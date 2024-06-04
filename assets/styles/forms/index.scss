@@ -1,0 +1,49 @@
+#form-add-city,
+#form-add-tag,
+#form-add-link,
+#form-add-description,
+#form-add-entreprise,
+#form-add-escape,
+.form-escm {
+
+    width: 100%;
+    @include flex($direction:column);
+
+    .name {
+        width: 100%;
+        @include flex();
+        color: $orange;
+        font-weight: bolder;
+        text-transform: capitalize;
+    }
+
+    form {
+        width: 40%;
+        @include flex($direction:column);
+
+        .info {
+            width: 100%;
+            @include flex($direction:column);
+            margin: 20px auto;
+    
+            .label {
+                width: 100%;
+                color: $orange;
+                font-style: italic;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            
+            input {
+                width: 100%;
+                border-radius: 5px;
+            }
+        }
+    
+        .submit-button {
+            width: 30%;
+            @include button($paddingY:10px, $paddingX:20px, $size:1rem);
+            @include flex();
+        }
+    }
+}

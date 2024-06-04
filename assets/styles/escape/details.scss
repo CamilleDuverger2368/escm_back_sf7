@@ -1,0 +1,89 @@
+#escape-details {
+
+    width: 100%;
+    margin: 20px auto;
+    @include flex($direction:column);
+        
+    .city {
+
+        margin: 10px auto;
+        color: $orange;
+        font-size: 1.5rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    #sort {
+
+        width: 100%;
+        @include flex($direction:column);
+
+        h1 {
+
+            font-size: 2rem;
+            font-weight: 600;
+            color: $orange;
+
+            span {
+
+                font-size: .75rem;
+            }
+        }
+
+        .actions {
+
+            width: 50%;
+            @include flex($justify:space-around);
+        }
+    }
+
+    #informations {
+
+        width: 100%;
+        @include flex($direction:column);
+
+        h2 {
+
+            color: $green;
+        }
+
+        .global {
+
+            width: 100%;
+            @include flex($justify:space-around);
+
+            .info {
+
+                @include flex($direction:column);
+
+                h3 {
+
+                    color: $orange;
+                }
+
+                div {
+
+                    @include flex();
+                }
+            }
+        }
+        
+        .description {
+
+            width: 100%;
+            @include flex($direction:column);
+
+            .text {
+
+                font-style: italic;
+                margin: 20px auto;
+            }
+
+            .actions {
+
+                width: 50%;
+                @include flex($justify:space-around);
+            }
+        }
+    }
+}

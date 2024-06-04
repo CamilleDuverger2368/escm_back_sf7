@@ -1,0 +1,35 @@
+{% extends "base.html.twig" %}
+
+{% block title %}List Entreprises{% endblock %}
+
+{% block body %}
+<div id="entreprises" class="container">
+    <section id="search">
+        <a class="button-add" href="{{ path("admin_entreprises_add") }}">Ajouter</a>
+        <div class="form-escm">
+            {{ form_start(form) }}
+                <div class="info">
+                    <div class="label">
+                    {{ form_label(form.cities) }}
+                    </div>
+                    {{ form_widget(form.cities) }}
+                </div>
+                <div class="info">
+                    <div class="label">
+                    {{ form_label(form.name) }}
+                    </div>
+                    {{ form_widget(form.name) }}
+                </div>
+                <div class="submit-button">{{ form_row(form.search) }}</div>
+            {{ form_end(form) }}
+        </div>
+    </section>
+    <section id="result">
+        <ul>
+            {% for entreprise in entreprises %}
+                <li><div class="name">{{ entreprise.name }}</div><a class="link" href='{{ path("admin_entreprises_edit", {id: entreprise.id}) }}'>Modifier</a><a class="link" href='{{ path("admin_entreprises_delete", {id: entreprise.id}) }}'>Supprimer</a><a class="link" href='{{ path("admin_entreprises_one", {id: entreprise.id}) }}'>Voir</a></li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
+{% endblock %}

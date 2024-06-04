@@ -1,0 +1,77 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Add Escape{% endblock %}
+
+{% block body %}
+<section id="form-add-escape" class="container">
+    {{ form_start(form) }}
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.name) }}
+            </div>
+            {{ form_widget(form.name) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.actual) }}
+            </div>
+            {{ form_widget(form.actual) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.time) }}
+            </div>
+            {{ form_widget(form.time) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.minPlayer) }}
+            </div>
+            {{ form_widget(form.minPlayer) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.maxPlayer) }}
+            </div>
+            {{ form_widget(form.maxPlayer) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.price) }}
+            </div>
+            {{ form_widget(form.price) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.age) }}
+            </div>
+            {{ form_widget(form.age) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.level) }}
+            </div>
+            {{ form_widget(form.level) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.cities) }}
+            </div>
+            {{ form_widget(form.cities) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.entreprises) }}
+            </div>
+            {{ form_widget(form.entreprises) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.tags) }}
+            </div>
+            {{ form_widget(form.tags) }}
+        </div>
+        <div class="submit-button">{{ form_row(form.enregistrer) }}</div>
+    {{ form_end(form) }}
+</section>
+{% endblock %}

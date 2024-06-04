@@ -1,0 +1,30 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Add Link{% endblock %}
+
+{% block body %}
+<section id="form-add-link" class="container">
+    <div class="name">{{ escape.name }}</div>
+    {{ form_start(form) }}
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.link) }}
+            </div>
+            {{ form_widget(form.link) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.city) }}
+            </div>
+            {{ form_widget(form.city) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.entreprise) }}
+            </div>
+            {{ form_widget(form.entreprise) }}
+        </div>
+        <div class="submit-button">{{ form_row(form.enregistrer) }}</div>
+    {{ form_end(form) }}
+</section>
+{% endblock %}

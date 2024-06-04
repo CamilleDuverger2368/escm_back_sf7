@@ -1,0 +1,54 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Details Entreprise{% endblock %}
+
+{% block body %}
+<div id="entreprise-details" class="container">
+    <section id="nav">
+        <a class="button-action" href='{{ path("admin_entreprises_list") }}'>Retour à la liste</a>
+    </section>
+    <section id="sort">
+        <h1>{{ entreprise.name }} <span>{{ entreprise.id }}</span></h1>
+        <div class="actions">
+            <a class="button-modify" href='{{ path("admin_entreprises_edit", {id: entreprise.id}) }}'>Modifier</a>
+            <a class="button-delete" href='{{ path("admin_entreprises_delete", {id: entreprise.id}) }}'>Supprimer</a>
+        </div>
+        {% if entreprise.cities|length > 1 %}
+        <div class="list-button">
+            {% for city in entreprise.cities %}
+                <a class="link" href='{{ path("admin_entreprises_one", {id: entreprise.id, city: city.id}) }}'>{{ city.name }}</a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="city">{{ entreprise.cities[0].name }}</div>
+        {% endif %}
+        <div class="form-escm">
+            {{ form_start(form) }}
+                <div class="info">
+                    <div class="label">
+                    {{ form_label(form.actuals) }}
+                    </div>
+                    {{ form_widget(form.actuals) }}
+                </div>
+                <div class="info">
+                    <div class="label">
+                    {{ form_label(form.unplayables) }}
+                    </div>
+                    {{ form_widget(form.unplayables) }}
+                </div>
+                <div class="submit-button">{{ form_row(form.search) }}</div>
+            {{ form_end(form) }}
+        </div>
+    </section>
+    <section id="escapes">
+        {% if citySelected is not null %}
+        <div class="city">{{ citySelected.name }}</div>
+        {% endif %}
+        <div class="list-button">
+        {% for escape in escapes %}
+            <a class="link" href='{{ path("admin_escapes_one", {id: escape.id}) }}'>{{ escape.name }}</a>
+        {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

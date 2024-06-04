@@ -1,0 +1,18 @@
+{% extends "base.html.twig" %}
+
+{% block title %}List Cities{% endblock %}
+
+{% block body %}
+<div id="cities" class="container">
+    <section id="search">
+        <a class="button-add" href="{{ path("admin_cities_add") }}">Ajouter</a>
+    </section>
+    <section id="result">
+        <ul>
+            {% for city in cities %}
+                <li><div class="name">{{ city.name }}</div><a class="link" href='{{ path("admin_cities_edit", {id: city.id}) }}'>Modifier</a><a class="link" href='{{ path("admin_cities_delete", {id: city.id}) }}'>Supprimer</a>{#<a class="link" href='{{ path("admin_cities_one", {id: city.id}) }}'>Voir</a>#}</li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
+{% endblock %}

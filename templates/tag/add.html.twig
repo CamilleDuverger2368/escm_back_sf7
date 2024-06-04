@@ -1,0 +1,17 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Add Tag{% endblock %}
+
+{% block body %}
+<section id="form-add-tag" class="container">
+    {{ form_start(form) }}
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.name) }}
+            </div>
+            {{ form_widget(form.name) }}
+        </div>
+        <div class="submit-button">{{ form_row(form.enregistrer) }}</div>
+    {{ form_end(form) }}
+</section>
+{% endblock %}

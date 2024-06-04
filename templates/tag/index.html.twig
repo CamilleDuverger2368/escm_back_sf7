@@ -1,0 +1,18 @@
+{% extends "base.html.twig" %}
+
+{% block title %}List Tags{% endblock %}
+
+{% block body %}
+<div id="tags" class="container">
+    <section id="search">
+        <a class="button-add" href="{{ path("admin_tags_add") }}">Ajouter</a>
+    </section>
+    <section id="result">
+        <ul>
+            {% for tag in tags %}
+                <li><div class="name">{{ tag.name }}</div><a class="link" href='{{ path("admin_tags_edit", {id: tag.id}) }}'>Modifier</a><a class="link" href='{{ path("admin_tags_delete", {id: tag.id}) }}'>Supprimer</a>{#<a class="link" href='{{ path("admin_tags_one", {id: tag.id}) }}'>Voir</a>#}</li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
+{% endblock %}
