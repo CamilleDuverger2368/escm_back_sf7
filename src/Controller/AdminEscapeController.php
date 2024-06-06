@@ -16,8 +16,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route("/admin/escapes", name: "admin_escapes_")]
+#[IsGranted("ROLE_ADMIN")]
 class AdminEscapeController extends AbstractController
 {
     private EscapeRepository $escapeRep;
@@ -98,6 +100,7 @@ class AdminEscapeController extends AbstractController
             $this->em->persist($escape);
             $this->em->flush();
 
+            $this->addFlash("success", "L'escape a bien été ajouté.");
             return $this->redirectToRoute("admin_escapes_list");
         }
         return $this->render("escape/add.html.twig", ["form" => $form->createView()]);
@@ -121,6 +124,7 @@ class AdminEscapeController extends AbstractController
             $this->em->persist($escape);
             $this->em->flush();
 
+            $this->addFlash("success", "L'escape a bien été modifié.");
             return $this->redirectToRoute("admin_escapes_list");
         }
         return $this->render("escape/add.html.twig", ["form" => $form->createView()]);
@@ -163,6 +167,7 @@ class AdminEscapeController extends AbstractController
             $this->em->persist($description);
             $this->em->flush();
 
+            $this->addFlash("success", "La description a bien été ajoutée.");
             return $this->redirectToRoute("admin_escapes_list");
         }
         return $this->render("escape/add-description.html.twig", ["form" => $form->createView(), "escape" => $escape]);
@@ -186,6 +191,7 @@ class AdminEscapeController extends AbstractController
             $this->em->persist($description);
             $this->em->flush();
 
+            $this->addFlash("success", "La description a bien été modifiée.");
             return $this->redirectToRoute("admin_escapes_list");
         }
         return $this->render("escape/add-description.html.twig", [
@@ -231,6 +237,7 @@ class AdminEscapeController extends AbstractController
             $this->em->persist($link);
             $this->em->flush();
 
+            $this->addFlash("success", "Le lien a bien été ajouté.");
             return $this->redirectToRoute("admin_escapes_list");
         }
         return $this->render("escape/add-link.html.twig", ["form" => $form->createView(), "escape" => $escape]);
@@ -254,6 +261,7 @@ class AdminEscapeController extends AbstractController
             $this->em->persist($link);
             $this->em->flush();
 
+            $this->addFlash("success", "Le lien a bien été modifié.");
             return $this->redirectToRoute("admin_escapes_list");
         }
         return $this->render("escape/add-link.html.twig", [

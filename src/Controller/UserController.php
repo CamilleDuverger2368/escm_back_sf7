@@ -71,7 +71,7 @@ class UserController extends AbstractController
     #[Route("/list", name: "list", methods: ["GET"])]
     public function getUsers(): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
+        if (!$this->security->getUser()) {
             return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
         }
         $users = $this->userRep->findAll();
@@ -133,19 +133,17 @@ class UserController extends AbstractController
         if (!$user = $this->security->getUser()) {
             return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
         }
-
-        $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()]);
-        $content = $request->toArray();
-        if ($user) {
-            if ($message = $this->userService->updatePasswordCurrentUser($user, $content)) {
-                return new JsonResponse(["message" => $message, Response::HTTP_BAD_REQUEST]);
-            }
-            $this->em->persist($user);
-            $this->em->flush();
-
-            return new JsonResponse(["message" => "user's password updated", Response::HTTP_OK]);
+        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
+            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
         }
-        return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
+        $content = $request->toArray();
+        if ($message = $this->userService->updatePasswordCurrentUser($user, $content)) {
+            return new JsonResponse(["message" => $message, Response::HTTP_BAD_REQUEST]);
+        }
+        $this->em->persist($user);
+        $this->em->flush();
+
+        return new JsonResponse(["message" => "user's password updated", Response::HTTP_OK]);
     }
 
     /**

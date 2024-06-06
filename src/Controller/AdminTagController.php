@@ -10,8 +10,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route("/admin/tags", name: "admin_tags_")]
+#[IsGranted("ROLE_ADMIN")]
 class AdminTagController extends AbstractController
 {
     private TagRepository $tagRep;
@@ -58,6 +60,7 @@ class AdminTagController extends AbstractController
             $this->em->persist($tag);
             $this->em->flush();
 
+            $this->addFlash("success", "Le tag a bien été ajouté.");
             return $this->redirectToRoute("admin_tags_list");
         }
         return $this->render("tag/add.html.twig", ["form" => $form->createView()]);
@@ -82,6 +85,7 @@ class AdminTagController extends AbstractController
             $this->em->persist($tag);
             $this->em->flush();
 
+            $this->addFlash("success", "Le tag a bien été modifié.");
             return $this->redirectToRoute("admin_tags_list");
         }
         return $this->render("tag/add.html.twig", ["form" => $form->createView()]);

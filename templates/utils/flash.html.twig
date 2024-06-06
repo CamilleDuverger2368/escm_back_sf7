@@ -1,0 +1,5 @@
+<section id="flashes" class="container">
+{% for type, messages in app.flashes %}
+    <div class="message {{ type }}">{{ messages | join(", ") }}</div>
+{% endfor %}
+</section>

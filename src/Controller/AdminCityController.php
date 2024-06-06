@@ -10,8 +10,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route("/admin/cities", name: "admin_cities_")]
+#[IsGranted("ROLE_ADMIN")]
 class AdminCityController extends AbstractController
 {
     private CityRepository $cityRep;
@@ -54,6 +56,7 @@ class AdminCityController extends AbstractController
             $this->em->persist($city);
             $this->em->flush();
 
+            $this->addFlash("success", "La ville a bien été ajoutée.");
             return $this->redirectToRoute("admin_cities_list");
         }
         return $this->render("city/add.html.twig", ["form" => $form->createView()]);
@@ -77,6 +80,7 @@ class AdminCityController extends AbstractController
             $this->em->persist($city);
             $this->em->flush();
 
+            $this->addFlash("success", "La ville a bien été modifiée.");
             return $this->redirectToRoute("admin_cities_list");
         }
         return $this->render("city/add.html.twig", ["form" => $form->createView()]);
