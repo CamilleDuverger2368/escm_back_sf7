@@ -18,9 +18,11 @@ use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route("/api/lists", name: "app_lists_")]
+#[IsGranted("ROLE_USER")]
 class ListController extends AbstractController
 {
     private ListFavoriRepository $favoriRep;

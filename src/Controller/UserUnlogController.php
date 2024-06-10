@@ -109,6 +109,7 @@ class UserUnlogController extends AbstractController
 
         $user->setValidated(true);
         $user->setLink($user->getName());
+        $user->setRoles(["ROLE_USER"]);
 
         $this->em->persist($user);
         $this->em->flush();
@@ -161,5 +162,31 @@ class UserUnlogController extends AbstractController
         $this->em->flush();
 
         return new JsonResponse(["message" => "mail sent", Response::HTTP_OK]);
+    }
+
+    /**
+     * @api POST
+     *
+     * @return JsonResponse
+     */
+    #[Route("/login", name: "login", methods: ["POST"])]
+    public function login(): JsonResponse
+    {
+        if (null === $user = $this->getUser()) {
+            return new JsonResponse(["message" => "missing credentials", Response::HTTP_UNAUTHORIZED]);
+        }
+        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
+            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
+        }
+        if ($realUser->isValidated() === false) {
+            return new JsonResponse(["message" => "You have to validate your email.", Response::HTTP_BAD_REQUEST]);
+        }
+
+        $token = hash("sha256", uniqid('', true));
+        $realUser->setApiToken($token);
+        $this->em->persist($realUser);
+        $this->em->flush();
+
+        return new JsonResponse(["user" => $realUser->getEmail(), "token" => $token, Response::HTTP_OK]);
     }
 }

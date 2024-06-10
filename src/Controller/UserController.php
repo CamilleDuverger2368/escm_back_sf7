@@ -12,11 +12,13 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route("/api/user", name: "app_user_")]
+#[IsGranted("ROLE_USER")]
 class UserController extends AbstractController
 {
     private Security $security;
@@ -41,6 +43,28 @@ class UserController extends AbstractController
         $this->userService = $userService;
         $this->userRep = $userRep;
         $this->validator = $validator;
+    }
+
+    /**
+     * @api PUT
+     *
+     * @return JsonResponse
+     */
+    #[Route("/logout", name: "logout", methods: ["PUT"])]
+    public function logout(): JsonResponse
+    {
+        if (null === $user = $this->getUser()) {
+            return new JsonResponse(["message" => "curent user not found", Response::HTTP_UNAUTHORIZED]);
+        }
+        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
+            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
+        }
+
+        $realUser->setApiToken(null);
+        $this->em->persist($realUser);
+        $this->em->flush();
+
+        return new JsonResponse(null, Response::HTTP_OK);
     }
 
     /**

@@ -134,6 +134,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\ManyToMany(targetEntity: Room::class, mappedBy: "members")]
     private Collection $rooms;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $apiToken = null;
+
     public function __construct()
     {
         $this->listFavoris = new ArrayCollection();
@@ -183,8 +186,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
-        $roles[] = "ROLE_USER";
 
         return array_unique($roles);
     }
@@ -456,6 +457,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if ($this->rooms->removeElement($room)) {
             $room->removeMember($this);
         }
+
+        return $this;
+    }
+
+    public function getApiToken(): ?string
+    {
+        return $this->apiToken;
+    }
+
+    public function setApiToken(?string $apiToken): static
+    {
+        $this->apiToken = $apiToken;
 
         return $this;
     }
