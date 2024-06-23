@@ -30,7 +30,8 @@ class MailerService
 //TO-DO : Remplacer l'adresse en dure par une variable selon l'environnement de lancement + mettre l'adresse du FRONT
               ->html("<p>Vous avez presque finalisé votre inscription !
               Il ne reste plus qu'à ce que vous validiez votre adresse mail avec le lien suivant
-              <a href='http://localhost:3000/login?link=" . $link . "'>Valider mon email</a>!</p>");
+              <a href='https://harmonious-dolphin-f4601c.netlify.app/login?link="
+              . $link . "'>Valider mon email</a>!</p>");
 
         $this->mailer->send($message);
     }
@@ -50,7 +51,7 @@ class MailerService
 //TO-DO : Remplacer l'adresse en dure par une variable selon l'environnement de lancement + mettre l'adresse du FRONT
               ->html("<p>Vous avez finalisé votre inscription ! Bravo !
               Il n'y a plus qu'a profiter des offres d'escapematch !
-              <a href='http://localhost:3000/login'>Se connecter</a></p>");
+              <a href='https://harmonious-dolphin-f4601c.netlify.app/login'>Se connecter</a></p>");
 
         $this->mailer->send($message);
     }
@@ -72,7 +73,7 @@ class MailerService
               ->html("<p>Voici votre nouveau mot de passe temporaire !</p>
               <p>" . $password . "</p>
               <p> Vous pouvez vous connecter avec celui ci et aller sur votre profil pour en creer un nouveau !
-              <a href='http://localhost:3000/login'>Me Connecter</a>!</p>");
+              <a href='https://harmonious-dolphin-f4601c.netlify.app/login'>Me Connecter</a>!</p>");
 
         $this->mailer->send($message);
     }
