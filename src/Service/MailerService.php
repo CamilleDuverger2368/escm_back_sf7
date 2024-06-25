@@ -30,8 +30,7 @@ class MailerService
 //TO-DO : Remplacer l'adresse en dure par une variable selon l'environnement de lancement + mettre l'adresse du FRONT
               ->html("<p>Vous avez presque finalisé votre inscription !
               Il ne reste plus qu'à ce que vous validiez votre adresse mail avec le lien suivant
-              <a href='https://harmonious-dolphin-f4601c.netlify.app/login?link="
-              . $link . "'>Valider mon email</a>!</p>");
+              <a href='https://escapematch.escmatch.fr/api/unlog/validation/" . $link . "'>Valider mon email</a>!</p>");
 
         $this->mailer->send($message);
     }

@@ -10,6 +10,7 @@ use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -98,10 +99,10 @@ class UserUnlogController extends AbstractController
      *
      * @api PUT
      *
-     * @return JsonResponse
+     * @return RedirectResponse | JsonResponse
      */
-    #[Route("/validation/{link}", name: "validation", methods: ["PUT"])]
-    public function validateEmail(string $link): JsonResponse
+    #[Route("/validation/{link}", name: "validation", methods: ["GET"])]
+    public function validateEmail(string $link): RedirectResponse | JsonResponse
     {
         if (!$user = $this->userRep->findOneBy(["link" => $link])) {
             return new JsonResponse(["message" => "can't find this user", Response::HTTP_BAD_REQUEST]);
@@ -116,7 +117,7 @@ class UserUnlogController extends AbstractController
 
         $this->mailerService->sendMailConfirm($user->getEmail());
 
-        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+        return $this->redirect('https://harmonious-dolphin-f4601c.netlify.app/login');
     }
 
     /**
