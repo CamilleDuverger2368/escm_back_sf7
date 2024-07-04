@@ -63,7 +63,6 @@ class AdminEscapeController extends AbstractController
         return $this->render("escape/index.html.twig", ["form" => $form->createView(), "escapes" => $escapes]);
     }
 
-
     /**
      * Details one escape
      *

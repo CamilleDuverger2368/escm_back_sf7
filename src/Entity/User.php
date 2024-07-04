@@ -137,12 +137,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $apiToken = null;
 
+    /**
+     * @var Collection<int, Achievement>
+     */
+    #[ORM\ManyToMany(targetEntity: Achievement::class, mappedBy: 'users')]
+    private Collection $achievements;
+
     public function __construct()
     {
         $this->listFavoris = new ArrayCollection();
         $this->listToDos = new ArrayCollection();
         $this->listDones = new ArrayCollection();
         $this->rooms = new ArrayCollection();
+        $this->achievements = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -469,6 +476,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setApiToken(?string $apiToken): static
     {
         $this->apiToken = $apiToken;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Achievement>
+     */
+    public function getAchievements(): Collection
+    {
+        return $this->achievements;
+    }
+
+    public function addAchievement(Achievement $achievement): static
+    {
+        if (!$this->achievements->contains($achievement)) {
+            $this->achievements->add($achievement);
+            $achievement->addUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAchievement(Achievement $achievement): static
+    {
+        if ($this->achievements->removeElement($achievement)) {
+            $achievement->removeUser($this);
+        }
 
         return $this;
     }
