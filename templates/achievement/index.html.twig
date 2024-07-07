@@ -10,7 +10,7 @@
     <section id="result">
         <ul>
             {% for achievement in achievements %}
-                <li><div class="name">{{ achievement.name }}</div><a class="link" href='{{ path("admin_achievements_edit", {id: achievement.id}) }}'>Modifier</a><a class="link" href='{{ path("admin_achievements_delete", {id: achievement.id}) }}'>Supprimer</a>{#<a class="link" href='{{ path("admin_cities_one", {id: city.id}) }}'>Voir</a>#}</li>
+                <li><div class="name">{{ achievement.name }}</div><a class="link" href='{{ path("admin_achievements_edit", {id: achievement.id}) }}'>Modifier</a><a class="link" href='{{ path("admin_achievements_delete", {id: achievement.id}) }}'>Supprimer</a><a class="link" href='{{ path("admin_achievements_one", {id: achievement.id}) }}'>Voir</a></li>
             {% endfor %}
         </ul>
     </section>
