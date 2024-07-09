@@ -28,6 +28,30 @@ class AdminAchievementController extends AbstractController
     }
 
     /**
+     * Add an achievement
+     *
+     * @return Response
+     */
+    #[Route("/add", name:"add")]
+    public function addAchievement(Request $request): Response
+    {
+        $achievement = new Achievement();
+        $form = $this->createForm(AchievementType::class, $achievement);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $achievement->setCreatedAt(new \DateTimeImmutable());
+            $achievement->setUpdatedAt(new \DateTimeImmutable());
+            $this->em->persist($achievement);
+            $this->em->flush();
+
+            $this->addFlash("success", "Le succès a bien été ajouté.");
+            return $this->redirectToRoute("admin_achievements_list");
+        }
+        return $this->render("achievement/add.html.twig", ["form" => $form->createView()]);
+    }
+
+    /**
      * List all Achievements
      *
      * @return Response
@@ -52,30 +76,6 @@ class AdminAchievementController extends AbstractController
     public function showAchievement(Request $request, Achievement $achievement): Response
     {
         return $this->render("achievement/details.html.twig", ["achievement" => $achievement]);
-    }
-
-    /**
-     * Add an achievement
-     *
-     * @return Response
-     */
-    #[Route("/add", name:"add")]
-    public function addAchievement(Request $request): Response
-    {
-        $achievement = new Achievement();
-        $form = $this->createForm(AchievementType::class, $achievement);
-
-        $form->handleRequest($request);
-        if ($form->isSubmitted() && $form->isValid()) {
-            $achievement->setCreatedAt(new \DateTimeImmutable());
-            $achievement->setUpdatedAt(new \DateTimeImmutable());
-            $this->em->persist($achievement);
-            $this->em->flush();
-
-            $this->addFlash("success", "Le succès a bien été ajouté.");
-            return $this->redirectToRoute("admin_achievements_list");
-        }
-        return $this->render("achievement/add.html.twig", ["form" => $form->createView()]);
     }
 
     /**

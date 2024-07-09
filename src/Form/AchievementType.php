@@ -22,7 +22,9 @@ class AchievementType extends AbstractType
             ->add("conditionType", ChoiceType::class, [
                 "choices" => [
                     "escape" => "escape",
-                    "social" => "social"
+                    "social" => "social",
+                    "grade" => "grade",
+                    "list" => "list"
                 ]
             ])
             ->add("tropheeType", ChoiceType::class, [
