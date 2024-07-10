@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: AchievementRepository::class)]
 class Achievement
@@ -14,12 +15,15 @@ class Achievement
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["getAchievements"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getAchievements"])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getAchievements"])]
     private ?string $conditionType = null;
 
     #[ORM\Column]
@@ -35,12 +39,14 @@ class Achievement
     private ?string $trophee = null;
 
     #[ORM\Column]
+    #[Groups(["getAchievements"])]
     private ?bool $scalable = null;
 
     #[ORM\OneToOne(targetEntity: self::class, cascade: ['persist', 'remove'])]
     private ?self $previousStep = null;
 
     #[ORM\OneToOne(targetEntity: self::class, cascade: ['persist', 'remove'])]
+    #[Groups(["getAchievements"])]
     private ?self $nextStep = null;
 
     /**
@@ -50,6 +56,7 @@ class Achievement
     private Collection $users;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(["getAchievements"])]
     private ?string $description = null;
 
     #[ORM\Column(length: 255)]

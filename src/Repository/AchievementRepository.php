@@ -23,12 +23,60 @@ class AchievementRepository extends ServiceEntityRepository
      *
      * @return array<Achievement>
      */
-    public function getAchievementsUnlockedOfTypeByUser(string $type, User $user)
+    public function getAchievementsToUnlockedOfTypeByUser(string $type, User $user)
     {
         return $this->createQueryBuilder('a')
                     ->andWhere(":type = a.conditionType")
-                    ->andWhere(":user !=MEMBER OF a.users")
+                    ->andWhere(":user NOT MEMBER OF a.users")
                     ->setParameter("type", $type)
+                    ->setParameter("user", $user)
+                    ->getQuery()
+                    ->getResult()
+        ;
+    }
+
+    /**
+     * @param string $type achievement's type
+     * @param User $user current user
+     *
+     * @return array<Achievement>
+     */
+    public function getUnlockedAchievementsOfTypeByUser(string $type, User $user)
+    {
+        return $this->createQueryBuilder('a')
+                    ->andWhere(":type = a.conditionType")
+                    ->andWhere(":user MEMBER OF a.users")
+                    ->setParameter("type", $type)
+                    ->setParameter("user", $user)
+                    ->getQuery()
+                    ->getResult()
+        ;
+    }
+
+    /**
+     * @param User $user current user
+     *
+     * @return array<Achievement>
+     */
+    public function getAchievementsToUnlocked(User $user)
+    {
+        return $this->createQueryBuilder('a')
+                    ->andWhere(":user NOT MEMBER OF a.users")
+                    ->setParameter("user", $user)
+                    ->getQuery()
+                    ->getResult()
+        ;
+    }
+    
+    /**
+     * @param User $user current user
+     *
+     * @return array<Achievement>
+     */
+    public function getUnlockedAchievements(User $user)
+    {
+        return $this->createQueryBuilder('a')
+                    ->andWhere(":user MEMBER OF a.users")
                     ->setParameter("user", $user)
                     ->getQuery()
                     ->getResult()

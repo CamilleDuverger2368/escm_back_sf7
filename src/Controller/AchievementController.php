@@ -33,6 +33,7 @@ class AchievementController extends AbstractController
         $this->security = $security;
         $this->serializer = $serializer;
     }
+
 // DEBUG !!!
     /**
      * WIP !!!!!!!!!!! 
@@ -48,10 +49,18 @@ class AchievementController extends AbstractController
             return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
         }
 
-        $this->achievementService->hasAchievementToUnlock("social", $user);
+        $unlockedAchievements = $this->achievementService->getUnlockedAchievements($user);
+        $achievementsToUnlocked = $this->achievementService->getAchievementsToUnlock($user);
+        
+        // Merge data
+        $data = array_merge(
+            ["unlocked" => $unlockedAchievements],
+            ["locked" => $achievementsToUnlocked]
+        );
 
-        // return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
-        return new JsonResponse(null, Response::HTTP_OK, ["accept" => "json"], true);
+        $json = $this->serializer->serialize($data, "json", ["groups" => "getAchievements"]);
+
+        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
 // DEBUG !!!
 }
