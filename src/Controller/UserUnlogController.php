@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Repository\CityRepository;
 use App\Repository\UserRepository;
+use App\Service\AchievementService;
 use App\Service\MailerService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,6 +23,7 @@ class UserUnlogController extends AbstractController
 {
     private UserRepository $userRep;
     private CityRepository $cityRep;
+    private AchievementService $achievementService;
     private SerializerInterface $serializer;
     private EntityManagerInterface $em;
     private MailerService $mailerService;
@@ -31,6 +33,7 @@ class UserUnlogController extends AbstractController
     public function __construct(
         UserRepository $userRep,
         CityRepository $cityRep,
+        AchievementService $achievementService,
         SerializerInterface $serializer,
         EntityManagerInterface $em,
         MailerService $mailerService,
@@ -39,6 +42,7 @@ class UserUnlogController extends AbstractController
     ) {
         $this->userRep = $userRep;
         $this->cityRep = $cityRep;
+        $this->achievementService = $achievementService;
         $this->serializer = $serializer;
         $this->em = $em;
         $this->mailerService = $mailerService;
@@ -72,6 +76,11 @@ class UserUnlogController extends AbstractController
 
         $this->em->persist($user);
         $this->em->flush();
+
+        // Check achievements
+        // if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $user)) > 0) {
+
+        // }
 
         return new JsonResponse(null, Response::HTTP_CREATED);
     }

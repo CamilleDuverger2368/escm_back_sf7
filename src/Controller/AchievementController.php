@@ -34,15 +34,14 @@ class AchievementController extends AbstractController
         $this->serializer = $serializer;
     }
 
-// DEBUG !!!
     /**
-     * WIP !!!!!!!!!!! 
+     * Get all (unlocked / locked) achievements of current user 
      *
      * @api GET
      *
      * @return JsonResponse
      */
-    #[Route("/", name:"test", methods: ["GET"])]
+    #[Route("/", name:"list", methods: ["GET"])]
     public function getAchievements(Request $request): JsonResponse
     {
         if (!$user = $this->security->getUser()) {
@@ -60,7 +59,9 @@ class AchievementController extends AbstractController
 
         $json = $this->serializer->serialize($data, "json", ["groups" => "getAchievements"]);
 
+        // DEBUG !!!
+        $this->achievementService->checkToUnlockAchievements($user, $achievementsToUnlocked);
+        // DEBUG !!!
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
-// DEBUG !!!
 }
