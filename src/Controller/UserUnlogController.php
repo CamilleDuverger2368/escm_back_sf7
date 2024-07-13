@@ -78,9 +78,9 @@ class UserUnlogController extends AbstractController
         $this->em->flush();
 
         // Check achievements
-        // if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $user)) > 0) {
-
-        // }
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
 
         return new JsonResponse(null, Response::HTTP_CREATED);
     }

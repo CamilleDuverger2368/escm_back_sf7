@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Service\AchievementService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,6 +26,7 @@ class UserController extends AbstractController
     private EntityManagerInterface $em;
     private SerializerInterface $serializer;
     private UserService $userService;
+    private AchievementService $achievementService;
     private UserRepository $userRep;
     private ValidatorInterface $validator;
 
@@ -34,6 +36,7 @@ class UserController extends AbstractController
         EntityManagerInterface $em,
         SerializerInterface $serializer,
         UserService $userService,
+        AchievementService $achievementService,
         UserRepository $userRep,
         ValidatorInterface $validator
     ) {
@@ -42,6 +45,7 @@ class UserController extends AbstractController
         $this->serializer = $serializer;
         $this->userService = $userService;
         $this->userRep = $userRep;
+        $this->achievementService = $achievementService;
         $this->validator = $validator;
     }
 
@@ -116,9 +120,9 @@ class UserController extends AbstractController
     #[Route("/{id}", name: "update", methods: ["PUT"])]
     public function updateCurrentUser(Request $request, User $user): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
+        // if (!$user = $this->security->getUser()) {
+        //     return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        // }
 
         $userUp = $this->serializer->deserialize(
             $request->getContent(),
@@ -137,6 +141,11 @@ class UserController extends AbstractController
 
         $this->em->persist($userUp);
         $this->em->flush();
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
 
         return new JsonResponse(["message" => "user updated", Response::HTTP_OK]);
     }

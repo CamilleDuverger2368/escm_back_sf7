@@ -10,6 +10,7 @@ use App\Repository\ListDoneRepository;
 use App\Repository\ListFavoriRepository;
 use App\Repository\ListToDoRepository;
 use App\Repository\UserRepository;
+use App\Service\AchievementService;
 use App\Service\ListService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -30,6 +31,7 @@ class ListController extends AbstractController
     private ListDoneRepository $doneRep;
     private UserRepository $userRep;
     private ListService $listService;
+    private AchievementService $achievementService;
     private SerializerInterface $serializer;
     private EntityManagerInterface $em;
     private Security $security;
@@ -39,6 +41,7 @@ class ListController extends AbstractController
         ListToDoRepository $toDoRep,
         ListDoneRepository $doneRep,
         UserRepository $userRep,
+        AchievementService $achievementService,
         SerializerInterface $serializer,
         ListService $listService,
         EntityManagerInterface $em,
@@ -49,6 +52,7 @@ class ListController extends AbstractController
         $this->doneRep = $doneRep;
         $this->userRep = $userRep;
         $this->listService = $listService;
+        $this->achievementService = $achievementService;
         $this->serializer = $serializer;
         $this->em = $em;
         $this->security = $security;
@@ -170,6 +174,11 @@ class ListController extends AbstractController
             $this->listService->addToToDo($user, $escape);
         }
 
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("list", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
+
         return new JsonResponse(null, Response::HTTP_CREATED);
     }
 
@@ -193,6 +202,14 @@ class ListController extends AbstractController
         }
 
         $this->listService->addToDone($user, $escape);
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("list", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("escape", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
 
         return new JsonResponse(null, Response::HTTP_CREATED);
     }

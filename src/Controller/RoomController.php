@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Room;
 use App\Repository\UserRepository;
+use App\Service\AchievementService;
 use App\Service\RoomService;
 use App\Service\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -22,6 +23,7 @@ class RoomController extends AbstractController
     private UserRepository $userRep;
     private RoomService $roomService;
     private UserService $userService;
+    private AchievementService $achievementService;
     private Security $security;
     private SerializerInterface $serializer;
 
@@ -29,12 +31,14 @@ class RoomController extends AbstractController
         UserRepository $userRep,
         RoomService $roomService,
         UserService $userService,
+        AchievementService $achievementService,
         Security $security,
         SerializerInterface $serializer
     ) {
         $this->userRep = $userRep;
         $this->roomService = $roomService;
         $this->userService = $userService;
+        $this->achievementService = $achievementService;
         $this->security = $security;
         $this->serializer = $serializer;
     }
@@ -122,6 +126,11 @@ class RoomController extends AbstractController
             return new JsonResponse(["message" => $message], Response::HTTP_BAD_REQUEST);
         }
 
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
+
         $json = $this->serializer->serialize($room, "json", ["groups" => "getRoom"]);
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
@@ -180,6 +189,11 @@ class RoomController extends AbstractController
         isset($content["member"]) ? $memberId = $content["member"] : $memberId = null;
         if ($message = $this->roomService->kickOffFrom($user, $room, $memberId)) {
             return new JsonResponse(["message" => $message], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
         }
 
         $json = $this->serializer->serialize($room, "json", ["groups" => "getRoom"]);
@@ -248,6 +262,11 @@ class RoomController extends AbstractController
         $room = new Room();
         isset($content["name"]) ? $name = $content["name"] : $name = null;
         $this->roomService->createRoom($room, $user, $members, $name);
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
 
         $json = $this->serializer->serialize($room, "json", ["groups" => "getRoom"]);
         return new JsonResponse($json, Response::HTTP_CREATED, ["accept" => "json"], true);

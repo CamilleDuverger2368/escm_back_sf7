@@ -6,9 +6,9 @@ use App\Entity\User;
 use App\Entity\Achievement;
 use App\Repository\AchievementRepository;
 use App\Repository\GradeRepository;
+use App\Repository\ListDoneRepository;
 use App\Repository\ListToDoRepository;
 use App\Repository\RoomRepository;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class AchievementService
@@ -17,6 +17,7 @@ class AchievementService
     private GradeRepository $gradeRep;
     private RoomRepository $roomRep;
     private ListToDoRepository $toDoRep;
+    private ListDoneRepository $doneRep;
     private EntityManagerInterface $em;
 
     public function __construct(
@@ -24,12 +25,14 @@ class AchievementService
         GradeRepository $gradeRep,
         RoomRepository $roomRep,
         ListToDoRepository $toDoRep,
+        ListDoneRepository $doneRep,
         EntityManagerInterface $em
     ) {
         $this->achievementRep = $achievementRep;
         $this->gradeRep = $gradeRep;
         $this->roomRep = $roomRep;
         $this->toDoRep = $toDoRep;
+        $this->doneRep = $doneRep;
         $this->em = $em;
     }
 
@@ -91,7 +94,7 @@ class AchievementService
      * Check achievements
      *
      * @param User $user current user
-     * @param array<Achievement> $achievemnts current user
+     * @param array<int, Achievement> $achievements current user
      *
      * @return void
      */
@@ -112,12 +115,14 @@ class AchievementService
      *
      * @return void
      */
-    public function onWorseGrade(User $user, Achievement $achievement)
+    public function onWorseGrade(User $user, Achievement $achievement): void
     {
         $grades = $this->gradeRep->findBy(["user" => $user]);
         foreach ($grades as $grade) {
             if ($grade->getGrade() === 1) {
                 $achievement->addUser($user);
+                $this->em->persist($achievement);
+                $this->em->flush();
                 break ;
             }
         }
@@ -131,12 +136,14 @@ class AchievementService
      *
      * @return void
      */
-    public function onBetterGrade(User $user, Achievement $achievement)
+    public function onBetterGrade(User $user, Achievement $achievement): void
     {
         $grades = $this->gradeRep->findBy(["user" => $user]);
         foreach ($grades as $grade) {
             if ($grade->getGrade() === 5) {
                 $achievement->addUser($user);
+                $this->em->persist($achievement);
+                $this->em->flush();
                 break ;
             }
         }
@@ -150,14 +157,16 @@ class AchievementService
      *
      * @return void
      */
-    public function onFirstGrade(User $user, Achievement $achievement)
+    public function onFirstGrade(User $user, Achievement $achievement): void
     {
         $grades = $this->gradeRep->findBy(["user" => $user]);
         if (count($grades) > 0) {
             $achievement->addUser($user);
+            $this->em->persist($achievement);
+            $this->em->flush();
         }
     }
-    
+
     /**
      * Check "Salut copain !"
      *
@@ -166,14 +175,16 @@ class AchievementService
      *
      * @return void
      */
-    public function onFirstContact(User $user, Achievement $achievement)
+    public function onFirstContact(User $user, Achievement $achievement): void
     {
         $rooms = $this->roomRep->getRoomWhereUserIsMember($user);
         if (count($rooms) > 0) {
             $achievement->addUser($user);
+            $this->em->persist($achievement);
+            $this->em->flush();
         }
     }
-    
+
     /**
      * Check "Tous ensemble !"
      *
@@ -182,17 +193,19 @@ class AchievementService
      *
      * @return void
      */
-    public function onCreateTeam(User $user, Achievement $achievement)
+    public function onCreateTeam(User $user, Achievement $achievement): void
     {
         $rooms = $this->roomRep->getRoomWhereUserIsMember($user);
         foreach ($rooms as $room) {
             if (count($room->getMembers()) > 2) {
                 $achievement->addUser($user);
+                $this->em->persist($achievement);
+                $this->em->flush();
                 break ;
             }
         }
     }
-    
+
     /**
      * Check "Le sacrosaint quatuor"
      *
@@ -201,17 +214,19 @@ class AchievementService
      *
      * @return void
      */
-    public function onCreatePerfectTeam(User $user, Achievement $achievement)
+    public function onCreatePerfectTeam(User $user, Achievement $achievement): void
     {
         $rooms = $this->roomRep->getRoomWhereUserIsMember($user);
         foreach ($rooms as $room) {
             if (count($room->getMembers()) === 4) {
                 $achievement->addUser($user);
+                $this->em->persist($achievement);
+                $this->em->flush();
                 break ;
             }
         }
     }
-    
+
     /**
      * Check "Viens ! On est déjà 9 !"
      *
@@ -220,17 +235,19 @@ class AchievementService
      *
      * @return void
      */
-    public function onCreateBigTeam(User $user, Achievement $achievement)
+    public function onCreateBigTeam(User $user, Achievement $achievement): void
     {
         $rooms = $this->roomRep->getRoomWhereUserIsMember($user);
         foreach ($rooms as $room) {
             if (count($room->getMembers()) >= 10) {
                 $achievement->addUser($user);
+                $this->em->persist($achievement);
+                $this->em->flush();
                 break ;
             }
         }
     }
-    
+
     /**
      * Check "Première quête !"
      *
@@ -239,14 +256,16 @@ class AchievementService
      *
      * @return void
      */
-    public function onAddToToDoList(User $user, Achievement $achievement)
+    public function onAddToToDoList(User $user, Achievement $achievement): void
     {
         $toDos = $this->toDoRep->findBy(["user" => $user]);
         if (count($toDos) > 0) {
             $achievement->addUser($user);
+            $this->em->persist($achievement);
+            $this->em->flush();
         }
     }
-    
+
     /**
      * Check "Premiers pas"
      *
@@ -255,7 +274,7 @@ class AchievementService
      *
      * @return void
      */
-    public function onCompleteRegister(User $user, Achievement $achievement)
+    public function onCompleteRegister(User $user, Achievement $achievement): void
     {
         $complete = true;
 
@@ -274,68 +293,124 @@ class AchievementService
 
         if ($complete) {
             $achievement->addUser($user);
+            $this->em->persist($achievement);
+            $this->em->flush();
         }
     }
-    
-    // WIP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    /**
+     * Check "10/10"
+     *
+     * @param User $user current user
+     * @param Achievement $achievement achievement to check
+     *
+     * @return void
+     */
+    public function onTenEscapeDone(User $user, Achievement $achievement): void
+    {
+        $dones = $this->doneRep->findBy(["user" => $user]);
+        if (count($dones) >= 10) {
+            $achievement->addUser($user);
+            $this->em->persist($achievement);
+            $this->em->flush();
+        }
+    }
+
+    /**
+     * Check "Maître du donjon"
+     *
+     * @param User $user current user
+     * @param Achievement $achievement achievement to check
+     *
+     * @return void
+     */
+    public function onFitfyEscapeDone(User $user, Achievement $achievement): void
+    {
+        $dones = $this->doneRep->findBy(["user" => $user]);
+        if (count($dones) >= 50) {
+            $achievement->addUser($user);
+            $this->em->persist($achievement);
+            $this->em->flush();
+        }
+    }
+
+    /**
+     * Check "Welcome aboard TERPECA"
+     *
+     * @param User $user current user
+     * @param Achievement $achievement achievement to check
+     *
+     * @return void
+     */
+    public function onHundredEscapeDone(User $user, Achievement $achievement): void
+    {
+        $dones = $this->doneRep->findBy(["user" => $user]);
+        if (count($dones) >= 100) {
+            $achievement->addUser($user);
+            $this->em->persist($achievement);
+            $this->em->flush();
+        }
+    }
 
     /**
      * Check "Travail terminé"
      *
      * @param User $user current user
+     * @param Achievement $achievement achievement to check
      *
      * @return void
      */
-    public function onFinishFirstEscapeWish(User $user)
+    public function onFinishFirstEscapeWish(User $user, Achievement $achievement): void
     {
-        dump("ZOG ZOG");
+        $todos = $this->toDoRep->findBy(["user" => $user]);
+        $dones = $this->doneRep->findBy(["user" => $user]);
+        $found = false;
+        foreach ($dones as $done) {
+            foreach ($todos as $todo) {
+                if ($todo->getEscape() === $done->getEscape()) {
+                    if ($todo->getSince() < $done->getSince()) {
+                        $achievement->addUser($user);
+                        $this->em->persist($achievement);
+                        $this->em->flush();
+                        $found = true;
+                        break ;
+                    }
+                }
+            }
+            if ($found) {
+                break ;
+            }
+        }
     }
-    
+
     /**
      * Check "I'll be back !"
      *
      * @param User $user current user
+     * @param Achievement $achievement achievement to check
      *
      * @return void
      */
-    public function onGoBackAgain(User $user)
+    public function onGoBackAgain(User $user, Achievement $achievement): void
     {
-        dump("ZOG ZOG");
-    }
-    
-    /**
-     * Check "10/10"
-     *
-     * @param User $user current user
-     *
-     * @return void
-     */
-    public function onTenEscapeDone(User $user)
-    {
-        dump("ZOG ZOG");
-    }
-    
-    /**
-     * Check "Maître du donjon"
-     *
-     * @param User $user current user
-     *
-     * @return void
-     */
-    public function onFitfyEscapeDone(User $user)
-    {
-        dump("ZOG ZOG");
-    }
-    
-    /**
-     * Check "Welcome aboard TERPECA"
-     *
-     * @param User $user current user
-     *
-     * @return void
-     */
-    public function onHundredEscapeDone(User $user)
-    {
-        dump("ZOG ZOG");
+        $todos = $this->toDoRep->findBy(["user" => $user]);
+        $dones = $this->doneRep->findBy(["user" => $user]);
+        $found = false;
+        foreach ($dones as $done) {
+            foreach ($todos as $todo) {
+                if ($todo->getEscape() === $done->getEscape()) {
+                    if ($todo->getSince() > $done->getSince()) {
+                        $achievement->addUser($user);
+                        $this->em->persist($achievement);
+                        $this->em->flush();
+                        $found = true;
+                        break ;
+                    }
+                }
+            }
+            if ($found) {
+                break ;
+            }
+        }
     }
 }

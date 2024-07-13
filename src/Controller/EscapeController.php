@@ -7,6 +7,7 @@ use App\Entity\Escape;
 use App\Entity\Grade;
 use App\Repository\GradeRepository;
 use App\Repository\UserRepository;
+use App\Service\AchievementService;
 use App\Service\EscapeService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,6 +30,7 @@ class EscapeController extends AbstractController
     private ValidatorInterface $validator;
     private EntityManagerInterface $em;
     private GradeRepository $gradeRep;
+    private AchievementService $achievementService;
     private UserRepository $userRep;
 
 
@@ -39,6 +41,7 @@ class EscapeController extends AbstractController
         ValidatorInterface $validator,
         EntityManagerInterface $em,
         GradeRepository $gradeRep,
+        AchievementService $achievementService,
         UserRepository $userRep
     ) {
         $this->security = $security;
@@ -48,6 +51,7 @@ class EscapeController extends AbstractController
         $this->em = $em;
         $this->gradeRep = $gradeRep;
         $this->userRep = $userRep;
+        $this->achievementService = $achievementService;
     }
 
     /**
@@ -166,6 +170,11 @@ class EscapeController extends AbstractController
         $this->em->persist($grade);
         $this->em->flush();
 
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("grade", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
+
         return new JsonResponse(null, Response::HTTP_CREATED);
     }
 
@@ -200,6 +209,11 @@ class EscapeController extends AbstractController
 
         $this->em->persist($grade);
         $this->em->flush();
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("grade", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
 
         return new JsonResponse(null, Response::HTTP_CREATED);
     }
