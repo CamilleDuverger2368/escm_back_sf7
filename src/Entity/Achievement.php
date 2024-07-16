@@ -33,9 +33,11 @@ class Achievement
     private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getAchievements"])]
     private ?string $tropheeType = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(["getAchievements"])]
     private ?string $trophee = null;
 
     #[ORM\Column]
