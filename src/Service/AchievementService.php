@@ -91,6 +91,19 @@ class AchievementService
     }
 
     /**
+     * Get unlocked objects3D for current user
+     *
+     * @param User $user current user
+     *
+     * @return array<Achievement>
+     */
+    public function getUnlockedObjects3D(User $user): array
+    {
+        $achievements = $this->achievementRep->getUnlockedObjects3D($user);
+        return $achievements;
+    }
+
+    /**
      * Check achievements
      *
      * @param User $user current user

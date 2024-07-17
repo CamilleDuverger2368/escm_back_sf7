@@ -52,11 +52,13 @@ class AchievementController extends AbstractController
 
         $unlockedAchievements = $this->achievementService->getUnlockedAchievements($user);
         $achievementsToUnlocked = $this->achievementService->getAchievementsToUnlock($user);
+        $objects3Dunlocked = $this->achievementService->getUnlockedObjects3D($user);
 
         // Merge data
         $data = array_merge(
             ["unlocked" => $unlockedAchievements],
-            ["locked" => $achievementsToUnlocked]
+            ["locked" => $achievementsToUnlocked],
+            ["object3D" => $objects3Dunlocked]
         );
 
         $json = $this->serializer->serialize($data, "json", ["groups" => "getAchievements"]);

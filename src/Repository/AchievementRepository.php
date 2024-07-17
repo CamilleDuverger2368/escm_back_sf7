@@ -67,7 +67,7 @@ class AchievementRepository extends ServiceEntityRepository
                     ->getResult()
         ;
     }
-    
+
     /**
      * @param User $user current user
      *
@@ -77,6 +77,23 @@ class AchievementRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('a')
                     ->andWhere(":user MEMBER OF a.users")
+                    ->setParameter("user", $user)
+                    ->getQuery()
+                    ->getResult()
+        ;
+    }
+
+    /**
+     * @param User $user current user
+     *
+     * @return array<Achievement>
+     */
+    public function getUnlockedObjects3D(User $user)
+    {
+        return $this->createQueryBuilder('a')
+                    ->select("a.trophee")
+                    ->andWhere(":user MEMBER OF a.users")
+                    ->andWhere("'3D' = a.tropheeType")
                     ->setParameter("user", $user)
                     ->getQuery()
                     ->getResult()
