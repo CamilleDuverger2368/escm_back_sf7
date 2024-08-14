@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\AchievementService;
+use App\Service\MailerService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -28,6 +29,7 @@ class UserController extends AbstractController
     private UserService $userService;
     private AchievementService $achievementService;
     private UserRepository $userRep;
+    private MailerService $mailerService;
     private ValidatorInterface $validator;
 
 
@@ -38,6 +40,7 @@ class UserController extends AbstractController
         UserService $userService,
         AchievementService $achievementService,
         UserRepository $userRep,
+        MailerService $mailerService,
         ValidatorInterface $validator
     ) {
         $this->security = $security;
@@ -45,6 +48,7 @@ class UserController extends AbstractController
         $this->serializer = $serializer;
         $this->userService = $userService;
         $this->userRep = $userRep;
+        $this->mailerService = $mailerService;
         $this->achievementService = $achievementService;
         $this->validator = $validator;
     }
@@ -173,6 +177,9 @@ class UserController extends AbstractController
         if ($message = $this->userService->updatePasswordCurrentUser($user, $content)) {
             return new JsonResponse(["message" => $message, Response::HTTP_BAD_REQUEST]);
         }
+
+        $this->mailerService->sendMailChangePwd($user->getEmail());
+
         $this->em->persist($user);
         $this->em->flush();
 

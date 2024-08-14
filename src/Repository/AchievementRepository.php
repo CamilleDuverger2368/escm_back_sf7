@@ -100,6 +100,23 @@ class AchievementRepository extends ServiceEntityRepository
         ;
     }
 
+    /**
+     * @param User $user current user
+     *
+     * @return array<Achievement>
+     */
+    public function getUnlockedPictures(User $user)
+    {
+        return $this->createQueryBuilder('a')
+                    ->select("a.trophee")
+                    ->andWhere(":user MEMBER OF a.users")
+                    ->andWhere("'image' = a.tropheeType")
+                    ->setParameter("user", $user)
+                    ->getQuery()
+                    ->getResult()
+        ;
+    }
+
     //    /**
     //     * @return Achievement[] Returns an array of Achievement objects
     //     */

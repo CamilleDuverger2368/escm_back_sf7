@@ -143,6 +143,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\ManyToMany(targetEntity: Achievement::class, mappedBy: 'users')]
     private Collection $achievements;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["getCurrent"])]
+    private ?string $profilPic = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(["getCurrent"])]
+    private ?\DateTimeImmutable $birthday = null;
+
+    #[ORM\Column]
+    #[Groups(["getCurrent"])]
+    private ?\DateTimeImmutable $createdAt = null;
+
     public function __construct()
     {
         $this->listFavoris = new ArrayCollection();
@@ -503,6 +515,42 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         if ($this->achievements->removeElement($achievement)) {
             $achievement->removeUser($this);
         }
+
+        return $this;
+    }
+
+    public function getProfilPic(): ?string
+    {
+        return $this->profilPic;
+    }
+
+    public function setProfilPic(?string $profilPic): static
+    {
+        $this->profilPic = $profilPic;
+
+        return $this;
+    }
+
+    public function getBirthday(): ?\DateTimeImmutable
+    {
+        return $this->birthday;
+    }
+
+    public function setBirthday(?\DateTimeImmutable $birthday): static
+    {
+        $this->birthday = $birthday;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    {
+        $this->createdAt = $createdAt;
 
         return $this;
     }

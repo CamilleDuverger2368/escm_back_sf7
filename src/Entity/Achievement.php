@@ -37,7 +37,7 @@ class Achievement
     private ?string $tropheeType = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getAchievements"])]
+    #[Groups(["getAchievements", "getUnlockedPicturesAchievements"])]
     private ?string $trophee = null;
 
     #[ORM\Column]

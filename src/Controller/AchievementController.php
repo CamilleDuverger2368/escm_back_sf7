@@ -65,4 +65,28 @@ class AchievementController extends AbstractController
 
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
+
+    /**
+     * Get unlocked picture's achievements of current user
+     *
+     * @api GET
+     *
+     * @return JsonResponse
+     */
+    #[Route("/pictures", name:"pictures_unlocked", methods: ["GET"])]
+    public function getUnlockedPicturesAchievements(): JsonResponse
+    {
+        if (!$user = $this->security->getUser()) {
+            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        }
+        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
+            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
+        }
+
+        $unlockedPic = $this->achievementService->getUnlockedPictures($user);
+
+        $json = $this->serializer->serialize($unlockedPic, "json", ["groups" => "getUnlockedPicturesAchievements"]);
+
+        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
+    }
 }

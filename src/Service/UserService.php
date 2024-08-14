@@ -48,6 +48,7 @@ class UserService
         $user->setValidated(false);
         $link = uniqid("", true);
         $user->setLink($link);
+        $user->setCreatedAt(new \DateTimeImmutable());
 
         return null;
     }

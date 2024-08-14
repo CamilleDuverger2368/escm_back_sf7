@@ -104,6 +104,19 @@ class AchievementService
     }
 
     /**
+     * Get unlocked pictures for current user
+     *
+     * @param User $user current user
+     *
+     * @return array<Achievement>
+     */
+    public function getUnlockedPictures(User $user): array
+    {
+        $achievements = $this->achievementRep->getUnlockedPictures($user);
+        return $achievements;
+    }
+
+    /**
      * Check achievements
      *
      * @param User $user current user

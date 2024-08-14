@@ -56,6 +56,27 @@ class MailerService
     }
 
     /**
+     * send confirm reset password
+     *
+     * @param string $email user's mail
+     */
+    public function sendMailChangePwd($email): void
+    {
+        $message = new Email();
+
+        $message->from("contact@escapematch.com")
+              ->to($email)
+              ->subject("Vous avez modifié votre mot de passe !")
+//TO-DO : Remplacer l'adresse en dure par une variable selon l'environnement de lancement
+              ->html("<p>Vous venez de modifier votre mot de passe !</p>
+              <p>Si cette action n'est pas de votre fait, contactez le gérant du site.</p>
+              <p>Vous pouvez vous connecter avec celui ci et aller sur votre profil !
+              <a href='https://harmonious-dolphin-f4601c.netlify.app/login'>Me Connecter</a>!</p>");
+
+        $this->mailer->send($message);
+    }
+
+    /**
      * send reset password
      *
      * @param string $email user's mail
