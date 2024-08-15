@@ -2,9 +2,11 @@
 
 namespace App\Service;
 
+use App\Entity\Friendship;
 use App\Entity\User;
 use App\Repository\CityRepository;
 use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserService
@@ -12,15 +14,18 @@ class UserService
     private CityRepository $cityRep;
     private UserPasswordHasherInterface $userPasswordHasher;
     private UserRepository $userRep;
+    private EntityManagerInterface $em;
 
     public function __construct(
         CityRepository $cityRep,
         UserPasswordHasherInterface $userPasswordHasher,
-        UserRepository $userRep
+        UserRepository $userRep,
+        EntityManagerInterface $em
     ) {
         $this->cityRep = $cityRep;
         $this->userPasswordHasher = $userPasswordHasher;
         $this->userRep = $userRep;
+        $this->em = $em;
     }
 
     /**
@@ -151,5 +156,35 @@ class UserService
             array_push($members, $user);
         }
         return $members;
+    }
+
+    /**
+     * Get an array of user from a search
+     *
+     * @param string $search name, firstname or pseudo
+     * @param User $user current user
+     *
+     * @return array<User>
+     */
+    public function getUsersByNameOrPseudo(string $search, User $user): array
+    {
+        return $this->userRep->getUsersByNameOrPseudo($search, $user);
+    }
+
+    /**
+     * Create a friend request
+     *
+     * @param User $sender current user
+     * @param User $receiver futur friend ?
+     */
+    public function friendRequest(User $sender, User $receiver): void
+    {
+        $asking = new Friendship();
+        $asking->setSender($sender);
+        $asking->setReceiver($receiver);
+        $asking->setFriend(false);
+
+        $this->em->persist($asking);
+        $this->em->flush();
     }
 }

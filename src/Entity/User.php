@@ -17,13 +17,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getCurrent", "getEscape", "getAlterUser", "getRoom", "getMessages", "getListUsers"])]
+    #[Groups(["getCurrent",
+              "getEscape",
+              "getAlterUser",
+              "getRoom",
+              "getMessages",
+              "getListUsers",
+              "findFriends"
+    ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
     #[Assert\NotBlank(message: "email can't be blanck")]
     #[Assert\Email(message: "give us a valid email")]
-    #[Groups(["getCurrent", "getRoom", "getMessages"])]
+    #[Groups(["getCurrent",
+              "getRoom",
+              "getMessages"
+    ])]
     private string $email = '';
 
     /**
@@ -53,7 +63,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     )]
     #[Assert\Regex(pattern: "/\d/", match: false, message: "Your name cannot contain a number")]
     #[Assert\Type(type: "string", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getCurrent", "getEscape", "getAlterUser", "getRoom", "getMessages", "getListUsers"])]
+    #[Groups(["getCurrent",
+              "getEscape",
+              "getAlterUser",
+              "getRoom",
+              "getMessages",
+              "getListUsers",
+              "findFriends"
+    ])]
     private string $name = '';
 
     #[ORM\Column(length: 255)]
@@ -66,39 +83,65 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     )]
     #[Assert\Regex(pattern: "/\d/", match: false, message: "your firstname cannot contain a number")]
     #[Assert\Type(type: "string", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getCurrent", "getEscape", "getAlterUser", "getRoom", "getMessages", "getListUsers"])]
+    #[Groups(["getCurrent",
+              "getEscape",
+              "getAlterUser",
+              "getRoom",
+              "getMessages",
+              "getListUsers",
+              "findFriends"
+    ])]
     private string $firstname = '';
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["getCurrent", "getEscape", "getAlterUser", "getRoom", "getMessages", "getListUsers"])]
+    #[Groups(["getCurrent",
+              "getEscape",
+              "getAlterUser",
+              "getRoom",
+              "getMessages",
+              "getListUsers",
+              "findFriends"
+    ])]
     private ?string $pseudo = null;
 
     #[ORM\Column(nullable: true)]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getCurrent", "getAlterUser"])]
+    #[Groups(["getCurrent",
+              "getAlterUser"
+    ])]
     private ?int $age = null;
 
     #[ORM\Column(type: "float", nullable: true)]
     #[Assert\Type(type: "float", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getCurrent", "getAlterUser"])]
+    #[Groups(["getCurrent",
+              "getAlterUser"
+    ])]
     private ?float $level = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Type(type: "string", message: "{{ value }} is not a valid {{ type }}")]
     #[Assert\Regex(pattern: "/\d/", match: false, message: "Pronouns cannot contain a number")]
-    #[Groups(["getCurrent", "getAlterUser", "getRoom", "getMessages"])]
+    #[Groups(["getCurrent",
+              "getAlterUser",
+              "getRoom",
+              "getMessages"
+    ])]
     private ?string $pronouns = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Type(type: "string", message: "{{ value }} is not a valid {{ type }}")]
     #[Assert\Regex(pattern: "/\d/", match: false, message: "Profil cannot contain a number")]
-    #[Groups(["getCurrent", "getAlterUser"])]
+    #[Groups(["getCurrent",
+              "getAlterUser"
+    ])]
     private ?string $profil = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     #[Assert\Type(City::class)]
-    #[Groups(["getCurrent", "getAlterUser"])]
+    #[Groups(["getCurrent",
+              "getAlterUser"
+    ])]
     private ?City $city = null;
 
     #[ORM\Column]
@@ -144,15 +187,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $achievements;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["getCurrent"])]
+    #[Groups(["getCurrent",
+              "getAlterUser",
+              "findFriends"
+    ])]
     private ?string $profilPic = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(["getCurrent"])]
+    #[Groups(["getCurrent",
+              "getAlterUser"
+    ])]
     private ?\DateTimeImmutable $birthday = null;
 
     #[ORM\Column]
-    #[Groups(["getCurrent"])]
+    #[Groups(["getCurrent",
+              "getAlterUser"
+    ])]
     private ?\DateTimeImmutable $createdAt = null;
 
     public function __construct()
