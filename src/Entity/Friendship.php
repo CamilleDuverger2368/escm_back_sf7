@@ -13,25 +13,33 @@ class Friendship
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getAlterUser"])]
+    #[Groups(["getAlterUser",
+              "getRequestsAndFriendships"
+    ])]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Groups(["getAlterUser"])]
     private ?\DateTimeInterface $since = null;
 
-    #[ORM\OneToOne]
+    #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(["getAlterUser"])]
+    #[Groups(["getAlterUser",
+              "getRequestsAndFriendships"
+    ])]
     private ?User $sender = null;
 
-    #[ORM\OneToOne]
+    #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(["getAlterUser"])]
+    #[Groups(["getAlterUser",
+              "getRequestsAndFriendships"
+    ])]
     private ?User $receiver = null;
 
     #[ORM\Column]
-    #[Groups(["getAlterUser"])]
+    #[Groups(["getAlterUser",
+            "getRequestsAndFriendships"
+    ])]
     private ?bool $friend = null;
 
     public function getId(): ?int

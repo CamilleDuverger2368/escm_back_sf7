@@ -6,7 +6,6 @@ use App\Entity\Friendship;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\UserService;
-use Doctrine\Common\Cache\FlushableCache;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -124,7 +123,7 @@ class FriendController extends AbstractController
     #[Route("/accept/{id}", name: "accept", methods: ["PUT"])]
     public function acceptRequestFriendship(Friendship $friendship): JsonResponse
     {
-        if (null === $user = $this->getUser()) {
+        if (null === $this->getUser()) {
             return new JsonResponse(["message" => "curent user not found", Response::HTTP_UNAUTHORIZED]);
         }
 
@@ -134,5 +133,27 @@ class FriendController extends AbstractController
         $this->em->flush();
 
         return new JsonResponse(null, Response::HTTP_OK);
+    }
+
+    /**
+     * Get all requests and friendships
+     *
+     * @api GET
+     *
+     * @return JsonResponse
+     */
+    #[Route("/list", name: "list", methods: ["GET"])]
+    public function getRequestsAndFriendships(): JsonResponse
+    {
+        if (null === $user = $this->getUser()) {
+            return new JsonResponse(["message" => "curent user not found", Response::HTTP_UNAUTHORIZED]);
+        }
+        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
+            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
+        }
+
+        $json = $this->userService->getRequestsAndFriendships($realUser);
+
+        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
 }

@@ -222,4 +222,25 @@ class UserService
 
         return $json;
     }
+
+    /**
+     * Get all requests and friendships
+     *
+     * @param User $user current user
+     *
+     * @return string
+     */
+    public function getRequestsAndFriendships(User $user): ?string
+    {
+        $friendships = $this->friendshipRep->getAllFriendships($user);
+        $askings = $this->friendshipRep->getAllRequests($user);
+        $data = array_merge(
+            ["askings" => $askings],
+            ["friendships" => $friendships]
+        );
+
+        $json = $this->serializer->serialize($data, "json", ["groups" => "getRequestsAndFriendships"]);
+
+        return $json;
+    }
 }

@@ -23,7 +23,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
               "getRoom",
               "getMessages",
               "getListUsers",
-              "findFriends"
+              "findFriends",
+              "getRequestsAndFriendships"
     ])]
     private ?int $id = null;
 
@@ -33,7 +34,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["getCurrent",
               "getAlterUser",
               "getRoom",
-              "getMessages"
+              "getMessages",
+              "getRequestsAndFriendships"
     ])]
     private string $email = '';
 
@@ -70,7 +72,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
               "getRoom",
               "getMessages",
               "getListUsers",
-              "findFriends"
+              "findFriends",
+              "getRequestsAndFriendships"
     ])]
     private string $name = '';
 
@@ -90,7 +93,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
               "getRoom",
               "getMessages",
               "getListUsers",
-              "findFriends"
+              "findFriends",
+              "getRequestsAndFriendships"
     ])]
     private string $firstname = '';
 
@@ -101,7 +105,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
               "getRoom",
               "getMessages",
               "getListUsers",
-              "findFriends"
+              "findFriends",
+              "getRequestsAndFriendships"
     ])]
     private ?string $pseudo = null;
 
@@ -190,7 +195,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(["getCurrent",
               "getAlterUser",
-              "findFriends"
+              "findFriends",
+              "getRequestsAndFriendships"
     ])]
     private ?string $profilPic = null;
 

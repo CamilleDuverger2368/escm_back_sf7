@@ -34,6 +34,36 @@ class FriendshipRepository extends ServiceEntityRepository
                    ->getOneOrNullResult();
     }
 
+    /**
+     * @param User $user user
+     *
+     * @return array<Friendship>
+     */
+    public function getAllFriendships(User $user)
+    {
+        return $this->createQueryBuilder('f')
+                   ->andWhere("f.friend = 1")
+                   ->andWhere("f.sender = :user OR f.receiver = :user")
+                   ->setParameter("user", $user)
+                   ->getQuery()
+                   ->getResult();
+    }
+
+    /**
+     * @param User $user user
+     *
+     * @return array<Friendship>
+     */
+    public function getAllRequests(User $user)
+    {
+        return $this->createQueryBuilder('f')
+                   ->andWhere("f.friend = 0")
+                   ->andWhere("f.sender = :user OR f.receiver = :user")
+                   ->setParameter("user", $user)
+                   ->getQuery()
+                   ->getResult();
+    }
+
     //    /**
     //     * @return Friendship[] Returns an array of Friendship objects
     //     */
