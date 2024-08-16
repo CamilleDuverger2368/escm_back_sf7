@@ -2,9 +2,12 @@
 
 namespace App\Controller;
 
+use App\Entity\Friendship;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\UserService;
+use Doctrine\Common\Cache\FlushableCache;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,16 +23,19 @@ class FriendController extends AbstractController
     private SerializerInterface $serializer;
     private UserService $userService;
     private UserRepository $userRep;
+    private EntityManagerInterface $em;
 
 
     public function __construct(
         SerializerInterface $serializer,
         UserService $userService,
-        UserRepository $userRep
+        UserRepository $userRep,
+        EntityManagerInterface $em
     ) {
         $this->serializer = $serializer;
         $this->userService = $userService;
         $this->userRep = $userRep;
+        $this->em = $em;
     }
 
     /**
@@ -79,8 +85,54 @@ class FriendController extends AbstractController
             return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
         }
 
-        $this->userService->friendRequest($realUser, $receiver);
+        $json = $this->userService->friendRequest($realUser, $receiver);
 
-        return new JsonResponse(null, Response::HTTP_CREATED);
+        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
+    }
+
+    /**
+     * Decline request friendship
+     *
+     * @param Friendship $friendship to decline
+     *
+     * @api DELETE
+     *
+     * @return JsonResponse
+     */
+    #[Route("/decline/{id}", name: "decline", methods: ["DELETE"])]
+    public function declineRequestFriendship(Friendship $friendship): JsonResponse
+    {
+        if (null === $user = $this->getUser()) {
+            return new JsonResponse(["message" => "curent user not found", Response::HTTP_UNAUTHORIZED]);
+        }
+
+        $this->em->remove($friendship);
+        $this->em->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Accept request friendship
+     *
+     * @param Friendship $friendship to accept
+     *
+     * @api PUT
+     *
+     * @return JsonResponse
+     */
+    #[Route("/accept/{id}", name: "accept", methods: ["PUT"])]
+    public function acceptRequestFriendship(Friendship $friendship): JsonResponse
+    {
+        if (null === $user = $this->getUser()) {
+            return new JsonResponse(["message" => "curent user not found", Response::HTTP_UNAUTHORIZED]);
+        }
+
+        $friendship->setFriend(true);
+        $friendship->setSince(new \DateTime());
+        $this->em->persist($friendship);
+        $this->em->flush();
+
+        return new JsonResponse(null, Response::HTTP_OK);
     }
 }

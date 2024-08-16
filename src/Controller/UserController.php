@@ -198,10 +198,13 @@ class UserController extends AbstractController
     #[Route("/alter/{id}", name: "alter", methods: ["GET"])]
     public function getAlterUser(User $user): JsonResponse
     {
-        if (!$this->security->getUser()) {
+        if (!$current = $this->security->getUser()) {
             return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
         }
-        $json = $this->serializer->serialize($user, "json", ["groups" => "getAlterUser"]);
+        if (null === $realUser = $this->userRep->findOneBy(["email" => $current->getUserIdentifier()])) {
+            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
+        }
+        $json = $this->userService->getAlterProfil($realUser, $user);
 
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }

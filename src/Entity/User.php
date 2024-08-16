@@ -31,6 +31,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\NotBlank(message: "email can't be blanck")]
     #[Assert\Email(message: "give us a valid email")]
     #[Groups(["getCurrent",
+              "getAlterUser",
               "getRoom",
               "getMessages"
     ])]

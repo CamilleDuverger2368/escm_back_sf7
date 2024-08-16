@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\FriendshipRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: FriendshipRepository::class)]
 class Friendship
@@ -12,20 +13,25 @@ class Friendship
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["getAlterUser"])]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[Groups(["getAlterUser"])]
     private ?\DateTimeInterface $since = null;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["getAlterUser"])]
     private ?User $sender = null;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["getAlterUser"])]
     private ?User $receiver = null;
 
     #[ORM\Column]
+    #[Groups(["getAlterUser"])]
     private ?bool $friend = null;
 
     public function getId(): ?int
