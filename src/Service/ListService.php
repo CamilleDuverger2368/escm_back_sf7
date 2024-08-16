@@ -18,18 +18,15 @@ class ListService
     private EntityManagerInterface $em;
     private ListFavoriRepository $favoriRep;
     private ListToDoRepository $toDoRep;
-    private ListDoneRepository $doneRep;
 
     public function __construct(
         EntityManagerInterface $em,
         ListFavoriRepository $favoriRep,
-        ListToDoRepository $toDoRep,
-        ListDoneRepository $doneRep,
+        ListToDoRepository $toDoRep
     ) {
         $this->em = $em;
         $this->favoriRep = $favoriRep;
         $this->toDoRep = $toDoRep;
-        $this->doneRep = $doneRep;
     }
 
     /**
@@ -70,54 +67,5 @@ class ListService
             $this->em->persist($toDo);
             $this->em->flush();
         }
-    }
-
-    /**
-     * Add an escape to current user's done
-     *
-     * @param User $user current user
-     * @param Escape $escape escape to add
-     */
-    public function addToDone(User $user, Escape $escape): void
-    {
-        if ($this->doneRep->isItAlreadyInList($user, $escape) === null) {
-            // Create ligne in user's list
-            $done = new ListDone();
-            $now = new DateTime("now");
-            $done->setSince($now);
-            $done->setUser($user);
-            $done->setEscape($escape);
-
-            // Give some Xp to current user
-            if ($user->getLevel() == null) {
-                $user->setLevel(0.25);
-            } else {
-                $user->setLevel($user->getLevel() + 0.25);
-            }
-
-            $this->em->persist($done);
-            $this->em->persist($user);
-            $this->em->flush();
-        }
-    }
-
-    /**
-     * Add an escape to current user's done
-     *
-     * @param User $user current user
-     * @param ListDone $done list to remove
-     */
-    public function removeFromDone(User $user, ListDone $done): void
-    {
-        // Withdraw some Xp to current user
-        if ($user->getLevel() <= 0.25) {
-            $user->setLevel(null);
-        } else {
-            $user->setLevel($user->getLevel() - 0.25);
-        }
-
-        $this->em->persist($user);
-        $this->em->remove($done);
-        $this->em->flush();
     }
 }

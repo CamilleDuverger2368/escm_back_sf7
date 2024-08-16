@@ -105,13 +105,6 @@ class Escape
     #[Groups(["getEscape"])]
     private Collection $listToDos;
 
-    /**
-     * @var Collection<int, ListDone> $listDones escape's dones
-     */
-    #[ORM\OneToMany(mappedBy: "escape", targetEntity: ListDone::class)]
-    #[Groups(["getEscape"])]
-    private Collection $listDones;
-
     #[ORM\Column]
     #[Groups(["getEscape"])]
     private ?bool $actual = null;
@@ -126,7 +119,6 @@ class Escape
         $this->grades = new ArrayCollection();
         $this->listFavoris = new ArrayCollection();
         $this->listToDos = new ArrayCollection();
-        $this->listDones = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -434,36 +426,6 @@ class Escape
             // set the owning side to null (unless already changed)
             if ($listToDo->getEscape() === $this) {
                 $listToDo->setEscape(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, ListDone>
-     */
-    public function getListDones(): Collection
-    {
-        return $this->listDones;
-    }
-
-    public function addListDone(ListDone $listDone): static
-    {
-        if (!$this->listDones->contains($listDone)) {
-            $this->listDones->add($listDone);
-            $listDone->setEscape($this);
-        }
-
-        return $this;
-    }
-
-    public function removeListDone(ListDone $listDone): static
-    {
-        if ($this->listDones->removeElement($listDone)) {
-            // set the owning side to null (unless already changed)
-            if ($listDone->getEscape() === $this) {
-                $listDone->setEscape(null);
             }
         }
 

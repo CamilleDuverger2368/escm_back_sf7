@@ -171,13 +171,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $listToDos;
 
     /**
-     * @var Collection<int, ListDone> user's list done
-     */
-    #[ORM\OneToMany(mappedBy: "user", targetEntity: ListDone::class, orphanRemoval: true)]
-    #[Groups(["getAlterUser"])]
-    private Collection $listDones;
-
-    /**
      * @var Collection<int, Room> user's rooms
      */
     #[ORM\ManyToMany(targetEntity: Room::class, mappedBy: "members")]
@@ -216,7 +209,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->listFavoris = new ArrayCollection();
         $this->listToDos = new ArrayCollection();
-        $this->listDones = new ArrayCollection();
         $this->rooms = new ArrayCollection();
         $this->achievements = new ArrayCollection();
     }
@@ -474,36 +466,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($listToDo->getUser() === $this) {
                 $listToDo->setUser(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, ListDone>
-     */
-    public function getListDones(): Collection
-    {
-        return $this->listDones;
-    }
-
-    public function addListDone(ListDone $listDone): static
-    {
-        if (!$this->listDones->contains($listDone)) {
-            $this->listDones->add($listDone);
-            $listDone->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeListDone(ListDone $listDone): static
-    {
-        if ($this->listDones->removeElement($listDone)) {
-            // set the owning side to null (unless already changed)
-            if ($listDone->getUser() === $this) {
-                $listDone->setUser(null);
             }
         }
 

@@ -11,7 +11,6 @@ use App\Repository\EntrepriseRepository;
 use App\Repository\EscapeRepository;
 use App\Repository\GradeRepository;
 use App\Repository\LinkRepository;
-use App\Repository\ListDoneRepository;
 use App\Repository\ListFavoriRepository;
 use App\Repository\ListToDoRepository;
 use App\Repository\TagRepository;
@@ -23,7 +22,6 @@ class EscapeService
     private LinkRepository $linkRep;
     private ListToDoRepository $todoRep;
     private ListFavoriRepository $favoriRep;
-    private ListDoneRepository $doneRep;
     private GradeRepository $gradeRep;
     private TagRepository $tagRep;
     private EntrepriseRepository $entrepriseRep;
@@ -35,7 +33,6 @@ class EscapeService
         LinkRepository $linkRep,
         ListToDoRepository $todoRep,
         ListFavoriRepository $favoriRep,
-        ListDoneRepository $doneRep,
         GradeRepository $gradeRep,
         TagRepository $tagRep,
         EntrepriseRepository $entrepriseRep,
@@ -46,7 +43,6 @@ class EscapeService
         $this->linkRep = $linkRep;
         $this->todoRep = $todoRep;
         $this->favoriRep = $favoriRep;
-        $this->doneRep = $doneRep;
         $this->gradeRep = $gradeRep;
         $this->tagRep = $tagRep;
         $this->entrepriseRep = $entrepriseRep;
@@ -95,7 +91,6 @@ class EscapeService
             // Get User's list and User's grade informations
             $isToDo = $this->todoRep->isItAlreadyInList($user, $escape) ?? false;
             $isFavorite = $this->favoriRep->isItAlreadyInList($user, $escape) ?? false;
-            $isDone = $this->doneRep->isItAlreadyInList($user, $escape) ?? false;
             $userGrade = $this->gradeRep->getGradeByUserAndEscape($user, $escape);
 
             // Merge data
@@ -107,7 +102,6 @@ class EscapeService
                 ["votes" => $frequency],
                 ["isToDo" => $isToDo],
                 ["isFavorite" => $isFavorite],
-                ["isDone" => $isDone],
                 ["userGrade" => $userGrade ? $userGrade->getGrade() : null]
             );
             $json = $this->serializer->serialize($data, "json", ["groups" => "getEscape"]);
@@ -150,7 +144,6 @@ class EscapeService
             // Get User's list and User's grade informations
             $isToDo = $this->todoRep->isItAlreadyInList($user, $escape) ?? false;
             $isFavorite = $this->favoriRep->isItAlreadyInList($user, $escape) ?? false;
-            $isDone = $this->doneRep->isItAlreadyInList($user, $escape) ?? false;
             $userGrade = $this->gradeRep->getGradeByUserAndEscape($user, $escape);
 
             // Merge data
@@ -162,7 +155,6 @@ class EscapeService
                 ["votes" => $frequency],
                 ["isToDo" => $isToDo],
                 ["isFavorite" => $isFavorite],
-                ["isDone" => $isDone],
                 ["userGrade" => $userGrade ? $userGrade->getGrade() : null]
             );
             $json = $this->serializer->serialize($data, "json", ["groups" => "getEscape"]);

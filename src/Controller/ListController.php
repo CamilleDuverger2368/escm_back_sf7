@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\Escape;
-use App\Entity\ListDone;
 use App\Entity\ListFavori;
 use App\Entity\ListToDo;
 use App\Repository\ListDoneRepository;
@@ -28,7 +27,6 @@ class ListController extends AbstractController
 {
     private ListFavoriRepository $favoriRep;
     private ListToDoRepository $toDoRep;
-    private ListDoneRepository $doneRep;
     private UserRepository $userRep;
     private ListService $listService;
     private AchievementService $achievementService;
@@ -39,7 +37,6 @@ class ListController extends AbstractController
     public function __construct(
         ListFavoriRepository $favoriRep,
         ListToDoRepository $toDoRep,
-        ListDoneRepository $doneRep,
         UserRepository $userRep,
         AchievementService $achievementService,
         SerializerInterface $serializer,
@@ -49,7 +46,6 @@ class ListController extends AbstractController
     ) {
         $this->favoriRep = $favoriRep;
         $this->toDoRep = $toDoRep;
-        $this->doneRep = $doneRep;
         $this->userRep = $userRep;
         $this->listService = $listService;
         $this->achievementService = $achievementService;
@@ -100,29 +96,6 @@ class ListController extends AbstractController
 
         $toDo = $this->toDoRep->getByUser($user);
         $json = $this->serializer->serialize($toDo, "json", ["groups" => "getList"]);
-
-        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
-    }
-
-    /**
-     * Return all current user's done
-     *
-     * @api GET
-     *
-     * @return JsonResponse
-     */
-    #[Route("/done", name: "done", methods: ["GET"])]
-    public function getUserDone(): JsonResponse
-    {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
-        }
-
-        $done = $this->doneRep->getByUser($user);
-        $json = $this->serializer->serialize($done, "json", ["groups" => "getList"]);
 
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
@@ -183,38 +156,6 @@ class ListController extends AbstractController
     }
 
     /**
-     * Add escape to current user's done
-     *
-     * @param Escape $escape escape to add
-     *
-     * @api POST
-     *
-     * @return JsonResponse
-     */
-    #[Route("/done/add/{id}", name: "add_to_done", methods: ["POST"])]
-    public function addUserDone(Escape $escape): JsonResponse
-    {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
-        }
-
-        $this->listService->addToDone($user, $escape);
-
-        // Check achievements
-        if (count($achievements = $this->achievementService->hasAchievementToUnlock("list", $user)) > 0) {
-            $this->achievementService->checkToUnlockAchievements($user, $achievements);
-        }
-        if (count($achievements = $this->achievementService->hasAchievementToUnlock("escape", $user)) > 0) {
-            $this->achievementService->checkToUnlockAchievements($user, $achievements);
-        }
-
-        return new JsonResponse(null, Response::HTTP_CREATED);
-    }
-
-    /**
      * Remove escape from current user's favori
      *
      * @param ListFavori $favori favori to remove
@@ -266,33 +207,6 @@ class ListController extends AbstractController
 
         $toDos = $this->toDoRep->getByUser($user);
         $json = $this->serializer->serialize($toDos, "json", ["groups" => "getList"]);
-
-        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
-    }
-
-    /**
-     * Remove escape from current user's done
-     *
-     * @param ListDone $done done to remove
-     *
-     * @api DELETE
-     *
-     * @return JsonResponse
-     */
-    #[Route("/done/remove/{id}", name: "remove_from_done", methods: ["DELETE"])]
-    public function removeUserDone(ListDone $done): JsonResponse
-    {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
-        }
-
-        $this->listService->removeFromDone($user, $done);
-
-        $dones = $this->doneRep->getByUser($user);
-        $json = $this->serializer->serialize($dones, "json", ["groups" => "getList"]);
 
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
