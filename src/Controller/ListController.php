@@ -2,10 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\DoneSession;
 use App\Entity\Escape;
 use App\Entity\ListFavori;
 use App\Entity\ListToDo;
-use App\Repository\ListDoneRepository;
 use App\Repository\ListFavoriRepository;
 use App\Repository\ListToDoRepository;
 use App\Repository\UserRepository;
@@ -285,6 +285,53 @@ class ListController extends AbstractController
         if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
             return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
         }
+
+        $json = $this->listService->getSessions($realUser);
+
+        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
+    }
+    
+    /**
+     * Get done sessions of current user for an escape
+     *
+     * @api GET
+     *
+     * @return JsonResponse
+     */
+    #[Route("/session/{id}", name: "escape-session", methods: ["GET"])]
+    public function getSessionsOfEscape(Escape $escape): JsonResponse
+    {
+        if (!$user = $this->security->getUser()) {
+            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        }
+        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
+            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
+        }
+
+        $json = $this->listService->getSessionsForEscape($realUser, $escape);
+
+        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
+    }
+    
+    /**
+     * Delete session
+     *
+     * @api DELETE
+     *
+     * @return JsonResponse
+     */
+    #[Route("/session/remove/{id}", name: "remove-session", methods: ["DELETE"])]
+    public function removeSession(DoneSession $session): JsonResponse
+    {
+        if (!$user = $this->security->getUser()) {
+            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        }
+        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
+            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
+        }
+
+        $this->em->remove($session);
+        $this->em->flush();
 
         $json = $this->listService->getSessions($realUser);
 

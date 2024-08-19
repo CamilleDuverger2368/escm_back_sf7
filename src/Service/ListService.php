@@ -149,4 +149,20 @@ class ListService
 
         return $json;
     }
+    
+    /**
+     * Get sessions for escape
+     *
+     * @param User $user current user
+     * @param Escape $escape escape
+     *
+     * @return string
+     */
+    public function getSessionsForEscape(User $user, Escape $escape): string
+    {
+        $sessions = $this->sessionRep->findSessionsByEscapeAndUser($user, $escape);
+        $json = $this->serializer->serialize($sessions, "json", ["groups" => "getSessions"]);
+
+        return $json;
+    }
 }

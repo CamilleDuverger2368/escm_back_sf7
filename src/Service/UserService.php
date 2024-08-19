@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Friendship;
 use App\Entity\User;
 use App\Repository\CityRepository;
+use App\Repository\DoneSessionRepository;
 use App\Repository\FriendshipRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -19,6 +20,7 @@ class UserService
     private FriendshipRepository $friendshipRep;
     private SerializerInterface $serializer;
     private EntityManagerInterface $em;
+    private DoneSessionRepository $sessionRep;
 
     public function __construct(
         CityRepository $cityRep,
@@ -26,7 +28,8 @@ class UserService
         UserRepository $userRep,
         FriendshipRepository $friendshipRep,
         SerializerInterface $serializer,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        DoneSessionRepository $sessionRep
     ) {
         $this->cityRep = $cityRep;
         $this->userPasswordHasher = $userPasswordHasher;
@@ -34,6 +37,7 @@ class UserService
         $this->friendshipRep = $friendshipRep;
         $this->serializer = $serializer;
         $this->em = $em;
+        $this->sessionRep = $sessionRep;
     }
 
     /**
@@ -232,7 +236,13 @@ class UserService
      */
     public function getRequestsAndFriendships(User $user): ?string
     {
-        $friendships = $this->friendshipRep->getAllFriendships($user);
+        $friends = $this->friendshipRep->getAllFriendships($user);
+        $friendships = [];
+        foreach ($friends as $friend) {
+            $count = $this->sessionRep->countSessions($friend->getReceiver(), $friend->getSender());
+            $tmp = array_merge(["friend" => $friend], ["sessions" => $count["count"]]);
+            array_push($friendships, $tmp);
+        }
         $askings = $this->friendshipRep->getAllRequests($user);
         $data = array_merge(
             ["askings" => $askings],

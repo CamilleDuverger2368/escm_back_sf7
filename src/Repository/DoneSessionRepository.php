@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\DoneSession;
+use App\Entity\Escape;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -29,6 +30,43 @@ class DoneSessionRepository extends ServiceEntityRepository
                     ->setParameter("user", $user)
                     ->getQuery()
                     ->getResult()
+        ;
+    }
+
+    /**
+     * @param User $user
+     * @param Escape $escape
+     *
+     * @return array<DoneSession>
+     */
+    public function findSessionsByEscapeAndUser(User $user, Escape $escape)
+    {
+        return $this->createQueryBuilder('d')
+                    ->andWhere(":user MEMBER OF d.members")
+                    ->andWhere("d.escape = :escape")
+                    ->setParameter("user", $user)
+                    ->setParameter("escape", $escape)
+                    ->getQuery()
+                    ->getResult()
+        ;
+    }
+
+    /**
+     * @param User $sender friend 1
+     * @param User $receiver friend 2
+     *
+     * @return array<DoneSession>
+     */
+    public function countSessions(User $sender, User $receiver)
+    {
+        return $this->createQueryBuilder('d')
+                    ->select("SUM(d.id) AS count")
+                    ->andWhere(":sender MEMBER OF d.members")
+                    ->andWhere(":receiver MEMBER OF d.members")
+                    ->setParameter("sender", $sender)
+                    ->setParameter("receiver", $receiver)
+                    ->getQuery()
+                    ->getOneOrNullResult()
         ;
     }
 
