@@ -16,6 +16,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -238,6 +239,54 @@ class ListController extends AbstractController
 
         $toDos = $this->toDoRep->getByUser($user);
         $json = $this->serializer->serialize($toDos, "json", ["groups" => "getList"]);
+
+        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
+    }
+
+    /**
+     * Add new session
+     *
+     * @param Request $request request object
+     *
+     * @api POST
+     *
+     * @return JsonResponse
+     */
+    #[Route("/session/add", name: "add-session", methods: ["POST"])]
+    public function addSession(Request $request): JsonResponse
+    {
+        if (!$user = $this->security->getUser()) {
+            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        }
+        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
+            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($message = $this->listService->addSession($realUser, $request->toArray())) {
+            return new JsonResponse(["message" => $message], Response::HTTP_BAD_REQUEST);
+        }
+
+        return new JsonResponse(null, Response::HTTP_CREATED);
+    }
+
+    /**
+     * Get done sessions of current user
+     *
+     * @api GET
+     *
+     * @return JsonResponse
+     */
+    #[Route("/session", name: "list-session", methods: ["GET"])]
+    public function getSessions(): JsonResponse
+    {
+        if (!$user = $this->security->getUser()) {
+            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        }
+        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
+            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
+        }
+
+        $json = $this->listService->getSessions($realUser);
 
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }

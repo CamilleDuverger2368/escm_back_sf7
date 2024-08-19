@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\DoneSession;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,6 +15,21 @@ class DoneSessionRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, DoneSession::class);
+    }
+
+    /**
+     * @param User $user
+     *
+     * @return array<DoneSession>
+     */
+    public function findSessions(User $user)
+    {
+        return $this->createQueryBuilder('d')
+                    ->andWhere(":user MEMBER OF d.members")
+                    ->setParameter("user", $user)
+                    ->getQuery()
+                    ->getResult()
+        ;
     }
 
     //    /**

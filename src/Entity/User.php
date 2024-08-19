@@ -24,7 +24,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
               "getMessages",
               "getListUsers",
               "findFriends",
-              "getRequestsAndFriendships"
+              "getRequestsAndFriendships",
+              "getSessions"
     ])]
     private ?int $id = null;
 
@@ -34,8 +35,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["getCurrent",
               "getAlterUser",
               "getRoom",
+              "getListUsers",
               "getMessages",
-              "getRequestsAndFriendships"
+              "getRequestsAndFriendships",
+              "getSessions"
     ])]
     private string $email = '';
 
@@ -73,7 +76,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
               "getMessages",
               "getListUsers",
               "findFriends",
-              "getRequestsAndFriendships"
+              "getRequestsAndFriendships",
+              "getSessions"
     ])]
     private string $name = '';
 
@@ -94,7 +98,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
               "getMessages",
               "getListUsers",
               "findFriends",
-              "getRequestsAndFriendships"
+              "getRequestsAndFriendships",
+              "getSessions"
     ])]
     private string $firstname = '';
 
@@ -106,7 +111,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
               "getMessages",
               "getListUsers",
               "findFriends",
-              "getRequestsAndFriendships"
+              "getRequestsAndFriendships",
+              "getSessions"
     ])]
     private ?string $pseudo = null;
 

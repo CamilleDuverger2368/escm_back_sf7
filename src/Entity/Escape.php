@@ -15,27 +15,42 @@ class Escape
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getEscape", "getList", "finder"])]
+    #[Groups(["getEscape",
+              "getList",
+              "finder",
+              "getSessions"
+    ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "name can't be blanck")]
-    #[Groups(["getEscape", "getList", "finder", "getAlterUser"])]
+    #[Groups(["getEscape",
+              "getList",
+              "finder",
+              "getAlterUser",
+              "getSessions"
+    ])]
     private ?string $name = null;
 
     #[ORM\Column]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getEscape", "finder"])]
+    #[Groups(["getEscape",
+              "finder"
+    ])]
     private ?int $time = null;
 
     #[ORM\Column]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getEscape", "finder"])]
+    #[Groups(["getEscape",
+              "finder"
+    ])]
     private ?int $minPlayer = null;
 
     #[ORM\Column]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getEscape", "finder"])]
+    #[Groups(["getEscape",
+              "finder"
+    ])]
     private ?int $maxPlayer = null;
 
     #[ORM\Column]
