@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\AvatarRepository;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: AvatarRepository::class)]
@@ -11,18 +12,23 @@ class Avatar
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["getAvatar"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["getAvatar"])]
     private ?string $title = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["getAvatar"])]
     private ?string $hat = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["getAvatar"])]
     private ?string $suit = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["getAvatar"])]
     private ?string $goodie = null;
 
     #[ORM\OneToOne(inversedBy: 'avatar', cascade: ['persist', 'remove'])]
@@ -30,9 +36,11 @@ class Avatar
     private ?User $user = null;
 
     #[ORM\Column]
+    #[Groups(["getAvatar"])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(nullable: true)]
+    #[Groups(["getAvatar"])]
     private ?\DateTimeImmutable $updatedAt = null;
 
     public function getId(): ?int

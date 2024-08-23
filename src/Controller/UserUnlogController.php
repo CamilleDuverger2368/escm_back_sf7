@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Avatar;
 use App\Entity\User;
 use App\Repository\CityRepository;
 use App\Repository\UserRepository;
@@ -75,6 +76,13 @@ class UserUnlogController extends AbstractController
         $this->mailerService->sendMailRegister($user->getEmail(), $user->getLink());
 
         $this->em->persist($user);
+
+        // Create user's avatar
+        $avatar = new Avatar();
+        $avatar->setCreatedAt(new \DateTimeImmutable());
+        $avatar->setUser($user);
+        $this->em->persist($avatar);
+
         $this->em->flush();
 
         // Check achievements
