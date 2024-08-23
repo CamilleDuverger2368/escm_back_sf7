@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\User;
 use App\Entity\Achievement;
 use App\Repository\AchievementRepository;
+use App\Repository\DoneSessionRepository;
 use App\Repository\GradeRepository;
 use App\Repository\ListToDoRepository;
 use App\Repository\RoomRepository;
@@ -17,19 +18,22 @@ class AchievementService
     private RoomRepository $roomRep;
     private ListToDoRepository $toDoRep;
     private EntityManagerInterface $em;
+    private DoneSessionRepository $sessionRep;
 
     public function __construct(
         AchievementRepository $achievementRep,
         GradeRepository $gradeRep,
         RoomRepository $roomRep,
         ListToDoRepository $toDoRep,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        DoneSessionRepository $sessionRep
     ) {
         $this->achievementRep = $achievementRep;
         $this->gradeRep = $gradeRep;
         $this->roomRep = $roomRep;
         $this->toDoRep = $toDoRep;
         $this->em = $em;
+        $this->sessionRep = $sessionRep;
     }
 
     /**
@@ -330,12 +334,18 @@ class AchievementService
      */
     public function onTenEscapeDone(User $user, Achievement $achievement): void
     {
-        // $dones = $this->doneRep->findBy(["user" => $user]);
-        // if (count($dones) >= 10) {
-        //     $achievement->addUser($user);
-        //     $this->em->persist($achievement);
-        //     $this->em->flush();
-        // }
+        $sessions = $this->sessionRep->findSessions($user);
+        $escapes = [];
+        foreach ($sessions as $session) {
+            if (!array_search($session->getEscape()->getId(), $escapes)) {
+                array_push($escapes, $session->getEscape()->getId());
+            }
+        }
+        if (count($escapes) >= 10) {
+            $achievement->addUser($user);
+            $this->em->persist($achievement);
+            $this->em->flush();
+        }
     }
 
     /**
@@ -348,12 +358,18 @@ class AchievementService
      */
     public function onFitfyEscapeDone(User $user, Achievement $achievement): void
     {
-        // $dones = $this->doneRep->findBy(["user" => $user]);
-        // if (count($dones) >= 50) {
-        //     $achievement->addUser($user);
-        //     $this->em->persist($achievement);
-        //     $this->em->flush();
-        // }
+        $sessions = $this->sessionRep->findSessions($user);
+        $escapes = [];
+        foreach ($sessions as $session) {
+            if (!array_search($session->getEscape()->getId(), $escapes)) {
+                array_push($escapes, $session->getEscape()->getId());
+            }
+        }
+        if (count($escapes) >= 50) {
+            $achievement->addUser($user);
+            $this->em->persist($achievement);
+            $this->em->flush();
+        }
     }
 
     /**
@@ -366,12 +382,18 @@ class AchievementService
      */
     public function onHundredEscapeDone(User $user, Achievement $achievement): void
     {
-        // $dones = $this->doneRep->findBy(["user" => $user]);
-        // if (count($dones) >= 100) {
-        //     $achievement->addUser($user);
-        //     $this->em->persist($achievement);
-        //     $this->em->flush();
-        // }
+        $sessions = $this->sessionRep->findSessions($user);
+        $escapes = [];
+        foreach ($sessions as $session) {
+            if (!array_search($session->getEscape()->getId(), $escapes)) {
+                array_push($escapes, $session->getEscape()->getId());
+            }
+        }
+        if (count($escapes) >= 100) {
+            $achievement->addUser($user);
+            $this->em->persist($achievement);
+            $this->em->flush();
+        }
     }
 
     /**
@@ -384,25 +406,25 @@ class AchievementService
      */
     public function onFinishFirstEscapeWish(User $user, Achievement $achievement): void
     {
-        // $todos = $this->toDoRep->findBy(["user" => $user]);
-        // $dones = $this->doneRep->findBy(["user" => $user]);
-        // $found = false;
-        // foreach ($dones as $done) {
-        //     foreach ($todos as $todo) {
-        //         if ($todo->getEscape() === $done->getEscape()) {
-        //             if ($todo->getSince() < $done->getSince()) {
-        //                 $achievement->addUser($user);
-        //                 $this->em->persist($achievement);
-        //                 $this->em->flush();
-        //                 $found = true;
-        //                 break ;
-        //             }
-        //         }
-        //     }
-        //     if ($found) {
-        //         break ;
-        //     }
-        // }
+        $todos = $this->toDoRep->findBy(["user" => $user]);
+        $dones = $this->sessionRep->findSessions($user);
+        $found = false;
+        foreach ($dones as $done) {
+            foreach ($todos as $todo) {
+                if ($todo->getEscape() === $done->getEscape()) {
+                    if ($todo->getSince() < $done->getPlayedAt()) {
+                        $achievement->addUser($user);
+                        $this->em->persist($achievement);
+                        $this->em->flush();
+                        $found = true;
+                        break ;
+                    }
+                }
+            }
+            if ($found) {
+                break ;
+            }
+        }
     }
 
     /**
@@ -415,24 +437,24 @@ class AchievementService
      */
     public function onGoBackAgain(User $user, Achievement $achievement): void
     {
-        // $todos = $this->toDoRep->findBy(["user" => $user]);
-        // $dones = $this->doneRep->findBy(["user" => $user]);
-        // $found = false;
-        // foreach ($dones as $done) {
-        //     foreach ($todos as $todo) {
-        //         if ($todo->getEscape() === $done->getEscape()) {
-        //             if ($todo->getSince() > $done->getSince()) {
-        //                 $achievement->addUser($user);
-        //                 $this->em->persist($achievement);
-        //                 $this->em->flush();
-        //                 $found = true;
-        //                 break ;
-        //             }
-        //         }
-        //     }
-        //     if ($found) {
-        //         break ;
-        //     }
-        // }
+        $todos = $this->toDoRep->findBy(["user" => $user]);
+        $dones = $this->sessionRep->findSessions($user);
+        $found = false;
+        foreach ($dones as $done) {
+            foreach ($todos as $todo) {
+                if ($todo->getEscape() === $done->getEscape()) {
+                    if ($todo->getSince() > $done->getPlayedAt()) {
+                        $achievement->addUser($user);
+                        $this->em->persist($achievement);
+                        $this->em->flush();
+                        $found = true;
+                        break ;
+                    }
+                }
+            }
+            if ($found) {
+                break ;
+            }
+        }
     }
 }
