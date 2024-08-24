@@ -97,6 +97,11 @@ class RoomController extends AbstractController
             return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
         }
 
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
+
         return new JsonResponse(["message" => "User is not a member of this room."], Response::HTTP_BAD_REQUEST);
     }
 

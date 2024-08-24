@@ -111,6 +111,11 @@ class EscapeController extends AbstractController
 
         $json = $this->escapeService->getInformationsWithEntreprise($user, $escape, $entreprise);
 
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("escape", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
+
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
 
@@ -134,6 +139,11 @@ class EscapeController extends AbstractController
         }
 
         $json = $this->escapeService->getInformations($user, $escape);
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("escape", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
 
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }

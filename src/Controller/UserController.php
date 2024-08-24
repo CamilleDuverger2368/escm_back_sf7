@@ -206,6 +206,11 @@ class UserController extends AbstractController
         }
         $json = $this->userService->getAlterProfil($realUser, $user);
 
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $realUser)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($realUser, $achievements);
+        }
+
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
 }

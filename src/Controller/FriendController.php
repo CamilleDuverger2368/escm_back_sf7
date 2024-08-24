@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Friendship;
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Service\AchievementService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -23,18 +24,20 @@ class FriendController extends AbstractController
     private UserService $userService;
     private UserRepository $userRep;
     private EntityManagerInterface $em;
-
+    private AchievementService $achievementService;
 
     public function __construct(
         SerializerInterface $serializer,
         UserService $userService,
         UserRepository $userRep,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        AchievementService $achievementService
     ) {
         $this->serializer = $serializer;
         $this->userService = $userService;
         $this->userRep = $userRep;
         $this->em = $em;
+        $this->achievementService = $achievementService;
     }
 
     /**
@@ -153,6 +156,11 @@ class FriendController extends AbstractController
         }
 
         $json = $this->userService->getRequestsAndFriendships($realUser);
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
 
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }

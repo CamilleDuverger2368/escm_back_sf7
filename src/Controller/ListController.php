@@ -75,6 +75,11 @@ class ListController extends AbstractController
         $favoris = $this->favoriRep->getByUser($user);
         $json = $this->serializer->serialize($favoris, "json", ["groups" => "getList"]);
 
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("list", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
+
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
 
@@ -97,6 +102,11 @@ class ListController extends AbstractController
 
         $toDo = $this->toDoRep->getByUser($user);
         $json = $this->serializer->serialize($toDo, "json", ["groups" => "getList"]);
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("list", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
 
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
@@ -288,9 +298,13 @@ class ListController extends AbstractController
 
         $json = $this->listService->getSessions($realUser);
 
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("list", $realUser)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($realUser, $achievements);
+        }
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
-    
+
     /**
      * Get done sessions of current user for an escape
      *
@@ -312,7 +326,7 @@ class ListController extends AbstractController
 
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
-    
+
     /**
      * Delete session
      *
