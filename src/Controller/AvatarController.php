@@ -25,7 +25,7 @@ class AvatarController extends AbstractController
     private Security $security;
     private UserRepository $userRep;
 
-    private const ELEMENTS = ["Title", "Hat", "Suit", "Goodie"];
+    private const ELEMENTS = ["Hat", "Suit", "Goodie"];
     private const TROPHEES = ["Glass",
                               "Torchman",
                               "Weapon",
@@ -143,12 +143,14 @@ class AvatarController extends AbstractController
      * Update avatar
      *
      * @param Avatar $avatar avatar's id
+     * @param string $element type of dressing
+     * @param string $name
      *
      * @api PUT
      *
      * @return JsonResponse
      */
-    #[Route("/dress/{id}/{element}/{name}", name:"find", methods: ["PUT"])]
+    #[Route("/dress/{id}/{element}/{name}", name:"dress", methods: ["PUT"])]
     public function dressAvatar(Avatar $avatar, string $element, string $name): JsonResponse
     {
         if (!$user = $this->security->getUser()) {
@@ -168,6 +170,38 @@ class AvatarController extends AbstractController
         }
         $setter = "set" . ucfirst(strtolower($element));
         $avatar->{$setter}(ucfirst(strtolower($name)));
+
+        $this->em->persist($avatar);
+        $this->em->flush();
+
+        $json = $this->serializer->serialize($avatar, "json", ["groups" => "getAvatar"]);
+
+        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
+    }
+
+    /**
+     * Update avatar's title
+     *
+     * @param Avatar $avatar avatar's id
+     * @param string $name title
+     *
+     * @api PUT
+     *
+     * @return JsonResponse
+     */
+    #[Route("/title/{id}/{name}", name:"title", methods: ["PUT"])]
+    public function titleAvatar(Avatar $avatar, string $name): JsonResponse
+    {
+        if (!$user = $this->security->getUser()) {
+            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        }
+        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
+            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
+        }
+        if ($avatar->getUser() !== $realUser) {
+            return new JsonResponse(["message" => "This is not user's avatar.", Response::HTTP_BAD_REQUEST]);
+        }
+        $avatar->setTitle($name);
 
         $this->em->persist($avatar);
         $this->em->flush();

@@ -105,6 +105,23 @@ class AchievementRepository extends ServiceEntityRepository
      *
      * @return array<Achievement>
      */
+    public function getUnlockedTitltes(User $user)
+    {
+        return $this->createQueryBuilder('a')
+                    ->select("a.trophee")
+                    ->andWhere(":user MEMBER OF a.users")
+                    ->andWhere("'title' = a.tropheeType")
+                    ->setParameter("user", $user)
+                    ->getQuery()
+                    ->getResult()
+        ;
+    }
+
+    /**
+     * @param User $user current user
+     *
+     * @return array<Achievement>
+     */
     public function getUnlockedPictures(User $user)
     {
         return $this->createQueryBuilder('a')
