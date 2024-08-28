@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\API\Global;
 
 use App\Entity\Avatar;
 use App\Entity\User;
-use App\Repository\AvatarRepository;
-use App\Repository\UserRepository;
+use App\Service\AvatarService;
+use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -19,11 +18,10 @@ use Symfony\Component\Serializer\SerializerInterface;
 #[IsGranted("ROLE_USER")]
 class AvatarController extends AbstractController
 {
-    private AvatarRepository $avatarRep;
     private SerializerInterface $serializer;
     private EntityManagerInterface $em;
-    private Security $security;
-    private UserRepository $userRep;
+    private AvatarService $avatarService;
+    private UserService $userService;
 
     private const ELEMENTS = ["Hat", "Suit", "Goodie"];
     private const TROPHEES = ["Glass",
@@ -38,21 +36,20 @@ class AvatarController extends AbstractController
                               "Smoking",
                               "SuitPants",
                               "Sweat",
-                              "Tshirt"
+                              "Tshirt",
+                              "Nothing"
                             ];
 
     public function __construct(
-        AvatarRepository $avatarRep,
         SerializerInterface $serializer,
-        Security $security,
         EntityManagerInterface $em,
-        UserRepository $userRep
+        AvatarService $avatarService,
+        UserService $userService
     ) {
-        $this->avatarRep = $avatarRep;
         $this->serializer = $serializer;
         $this->em = $em;
-        $this->security = $security;
-        $this->userRep = $userRep;
+        $this->avatarService = $avatarService;
+        $this->userService = $userService;
     }
 
     /**
@@ -84,34 +81,11 @@ class AvatarController extends AbstractController
     #[Route("/create/{id}", name:"unique", methods: ["POST"])]
     public function createAvatar(User $user): JsonResponse
     {
-        $avatar = new Avatar();
-        $avatar->setCreatedAt(new \DateTimeImmutable());
-        $avatar->setUser($user);
+        $avatar = $this->avatarService->createAvatar($user);
         $this->em->persist($avatar);
         $this->em->flush();
 
         return new JsonResponse(null, Response::HTTP_CREATED);
-    }
-
-    /**
-     * Return avatar by user's id
-     *
-     * @param User $user user's id
-     *
-     * @api GET
-     *
-     * @return JsonResponse
-     */
-    #[Route("/find/{id}", name:"find", methods: ["GET"])]
-    public function getAvatarByUserId(User $user): JsonResponse
-    {
-        $avatar = $this->avatarRep->findOneBy(["user" => $user]);
-        if ($avatar === null) {
-            return new JsonResponse(["message" => "Avatar not found."], Response::HTTP_BAD_REQUEST);
-        }
-        $json = $this->serializer->serialize($avatar, "json", ["groups" => "getAvatar"]);
-
-        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
 
     /**
@@ -124,15 +98,13 @@ class AvatarController extends AbstractController
     #[Route("/find", name:"current_avatar_find", methods: ["GET"])]
     public function getCurrentUserAvatar(): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
-        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
-        }
-        $avatar = $this->avatarRep->findOneBy(["user" => $realUser]);
-        if ($avatar === null) {
-            return new JsonResponse(["message" => "Avatar not found."], Response::HTTP_BAD_REQUEST);
+
+        $avatar = $this->avatarService->getUserAvatar($user);
+        if (getType($avatar) === "string") {
+            return new JsonResponse(["message" => $avatar], Response::HTTP_BAD_REQUEST);
         }
         $json = $this->serializer->serialize($avatar, "json", ["groups" => "getAvatar"]);
 
@@ -153,30 +125,31 @@ class AvatarController extends AbstractController
     #[Route("/dress/{id}/{element}/{name}", name:"dress", methods: ["PUT"])]
     public function dressAvatar(Avatar $avatar, string $element, string $name): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
-        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
-        }
-        if ($avatar->getUser() !== $realUser) {
+        if ($avatar->getUser() !== $user) {
             return new JsonResponse(["message" => "This is not user's avatar.", Response::HTTP_BAD_REQUEST]);
         }
-        if (!array_search(ucfirst(strtolower($element)), self::ELEMENTS)) {
+
+        if (false === array_search(ucfirst(strtolower($element)), self::ELEMENTS)) {
             return new JsonResponse(["message" => "Element not found."], Response::HTTP_BAD_REQUEST);
         }
-        if (!array_search(ucfirst(strtolower($name)), self::TROPHEES)) {
+        if (false === array_search(ucfirst(strtolower($name)), self::TROPHEES)) {
             return new JsonResponse(["message" => "Trophee not found."], Response::HTTP_BAD_REQUEST);
         }
+
         $setter = "set" . ucfirst(strtolower($element));
-        $avatar->{$setter}(ucfirst(strtolower($name)));
+        if (ucfirst(strtolower($name)) === "Nothing") {
+            $avatar->{$setter}('');
+        } else {
+            $avatar->{$setter}(ucfirst(strtolower($name)));
+        }
 
         $this->em->persist($avatar);
         $this->em->flush();
 
-        $json = $this->serializer->serialize($avatar, "json", ["groups" => "getAvatar"]);
-
-        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
+        return new JsonResponse(["message" => "Avatar updated", Response::HTTP_OK]);
     }
 
     /**
@@ -192,22 +165,18 @@ class AvatarController extends AbstractController
     #[Route("/title/{id}/{name}", name:"title", methods: ["PUT"])]
     public function titleAvatar(Avatar $avatar, string $name): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
-        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
-        }
-        if ($avatar->getUser() !== $realUser) {
+        if ($avatar->getUser() !== $user) {
             return new JsonResponse(["message" => "This is not user's avatar.", Response::HTTP_BAD_REQUEST]);
         }
+
         $avatar->setTitle($name);
 
         $this->em->persist($avatar);
         $this->em->flush();
 
-        $json = $this->serializer->serialize($avatar, "json", ["groups" => "getAvatar"]);
-
-        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
+        return new JsonResponse(["message" => "Avatar updated", Response::HTTP_OK]);
     }
 }

@@ -14,7 +14,6 @@ use App\Repository\ListToDoRepository;
 use App\Repository\UserRepository;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 
 class ListService
 {
@@ -24,7 +23,7 @@ class ListService
     private EscapeRepository $escapeRep;
     private UserRepository $userRep;
     private DoneSessionRepository $sessionRep;
-    private SerializerInterface $serializer;
+    private AchievementService $achievementService;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -33,7 +32,7 @@ class ListService
         EscapeRepository $escapeRep,
         UserRepository $userRep,
         DoneSessionRepository $sessionRep,
-        SerializerInterface $serializer
+        AchievementService $achievementService
     ) {
         $this->em = $em;
         $this->favoriRep = $favoriRep;
@@ -41,47 +40,7 @@ class ListService
         $this->escapeRep = $escapeRep;
         $this->userRep = $userRep;
         $this->sessionRep = $sessionRep;
-        $this->serializer = $serializer;
-    }
-
-    /**
-     * Add an escape to current user's favori
-     *
-     * @param User $user current user
-     * @param Escape $escape escape to add
-     */
-    public function addToFavori(User $user, Escape $escape): void
-    {
-        if ($this->favoriRep->isItAlreadyInList($user, $escape) === null) {
-            $favori = new ListFavori();
-            $now = new DateTime("now");
-            $favori->setSince($now);
-            $favori->setUser($user);
-            $favori->setEscape($escape);
-
-            $this->em->persist($favori);
-            $this->em->flush();
-        }
-    }
-
-    /**
-     * Add an escape to current user's to-do
-     *
-     * @param User $user current user
-     * @param Escape $escape escape to add
-     */
-    public function addToToDo(User $user, Escape $escape): void
-    {
-        if ($this->toDoRep->isItAlreadyInList($user, $escape) === null) {
-            $toDo = new ListToDo();
-            $now = new DateTime("now");
-            $toDo->setSince($now);
-            $toDo->setUser($user);
-            $toDo->setEscape($escape);
-
-            $this->em->persist($toDo);
-            $this->em->flush();
-        }
+        $this->achievementService = $achievementService;
     }
 
     /**
@@ -99,14 +58,116 @@ class ListService
     }
 
     /**
+     * Get user's favoris
+     *
+     * @param User $user current user
+     *
+     * @return array<int,ListFavori>
+     */
+    public function getUserFavoris(User $user): array
+    {
+        $favoris = $this->favoriRep->getByUser($user);
+
+        return $favoris;
+    }
+
+    /**
+     * Get user's to-dos
+     *
+     * @param User $user current user
+     *
+     * @return array<int,ListToDo>
+     */
+    public function getUserToDos(User $user): array
+    {
+        $toDo = $this->toDoRep->getByUser($user);
+
+        return $toDo;
+    }
+
+    /**
+     * Get user's sessions
+     *
+     * @param User $user user
+     *
+     * @return array<int, DoneSession>
+     */
+    public function getUserSessions(User $user): array
+    {
+        $sessions = $this->sessionRep->findSessions($user);
+
+        return $sessions;
+    }
+
+    /**
+     * Get sessions for escape
+     *
+     * @param User $user current user
+     * @param Escape $escape escape
+     *
+     * @return array<int,DoneSession>
+     */
+    public function getSessionsForEscape(User $user, Escape $escape): array
+    {
+        $sessions = $this->sessionRep->findSessionsByEscapeAndUser($user, $escape);
+
+        return $sessions;
+    }
+
+    /**
+     * Add an escape to current user's favori
+     *
+     * @param User $user current user
+     * @param Escape $escape escape to add
+     *
+     * @return ListFavori|null
+     */
+    public function addToFavori(User $user, Escape $escape): ?ListFavori
+    {
+        if ($this->favoriRep->isItAlreadyInList($user, $escape) === null) {
+            $favori = new ListFavori();
+            $now = new DateTime("now");
+            $favori->setSince($now);
+            $favori->setUser($user);
+            $favori->setEscape($escape);
+
+            return $favori;
+        }
+        return null;
+    }
+
+    /**
+     * Add an escape to current user's to-do
+     *
+     * @param User $user current user
+     * @param Escape $escape escape to add
+     *
+     * @return ListToDo|null
+     */
+    public function addToToDo(User $user, Escape $escape): ?ListToDo
+    {
+        if ($this->toDoRep->isItAlreadyInList($user, $escape) === null) {
+            $toDo = new ListToDo();
+            $now = new DateTime("now");
+            $toDo->setSince($now);
+            $toDo->setUser($user);
+            $toDo->setEscape($escape);
+
+            return $toDo;
+        }
+
+        return null;
+    }
+
+    /**
      * Add session
      *
      * @param User $user current user
      * @param array $informations members / date / escape
      *
-     * @return string|null
+     * @return DoneSession|string
      */
-    public function addSession(User $user, array $informations): string|null
+    public function addSession(User $user, array $informations): DoneSession|string
     {
         if (!$informations["date"]) {
             return "Need session's date.";
@@ -121,48 +182,26 @@ class ListService
         }
         $session->setEscape($escape);
         $session->addMember($user);
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("list", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
+
         $this->checkAndUpdateIfDoneEscapeIsInToDoList($user, $escape);
         foreach ($informations["members"] as $member) {
             $user = $this->userRep->findOneBy(["id" => $member]);
             $session->addMember($user);
+
+            // Check achievements
+            if (count($achievements = $this->achievementService->hasAchievementToUnlock("list", $user)) > 0) {
+                $this->achievementService->checkToUnlockAchievements($user, $achievements);
+            }
+
             $this->checkAndUpdateIfDoneEscapeIsInToDoList($user, $escape);
         }
         $session->setPlayedAt(new DateTime($informations["date"]));
 
-        $this->em->persist($session);
-        $this->em->flush();
-
-        return null;
-    }
-
-    /**
-     * Get sessions
-     *
-     * @param User $user current user
-     *
-     * @return string
-     */
-    public function getSessions(User $user): string
-    {
-        $sessions = $this->sessionRep->findSessions($user);
-        $json = $this->serializer->serialize($sessions, "json", ["groups" => "getSessions"]);
-
-        return $json;
-    }
-    
-    /**
-     * Get sessions for escape
-     *
-     * @param User $user current user
-     * @param Escape $escape escape
-     *
-     * @return string
-     */
-    public function getSessionsForEscape(User $user, Escape $escape): string
-    {
-        $sessions = $this->sessionRep->findSessionsByEscapeAndUser($user, $escape);
-        $json = $this->serializer->serialize($sessions, "json", ["groups" => "getSessions"]);
-
-        return $json;
+        return $session;
     }
 }

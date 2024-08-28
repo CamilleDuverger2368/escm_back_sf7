@@ -13,6 +13,7 @@ class City
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["getInformationsCurrentUser"])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
@@ -25,7 +26,15 @@ class City
     )]
     #[Assert\Regex(pattern: "/\d/", match: false, message: "city's name cannot contain a number",)]
     #[Assert\Type(type: "string", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getCurrent", "getEscape", "getAlterUser"])]
+    #[Groups(["getCurrent",
+              "getEscape",
+              "getAlterUser",
+
+
+              "getInformationsCurrentUser",
+              "routeEscape",
+              "routeAlterUser"
+    ])]
     private ?string $name = null;
 
     public function getId(): ?int

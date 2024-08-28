@@ -15,15 +15,24 @@ class Achievement
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getAchievements"])]
+    #[Groups(["getAchievements",
+
+              "routeAchievements"
+    ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getAchievements"])]
+    #[Groups(["getAchievements",
+
+              "routeAchievements"
+    ])]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getAchievements"])]
+    #[Groups(["getAchievements",
+
+              "routeAchievements"
+    ])]
     private ?string $conditionType = null;
 
     #[ORM\Column]
@@ -33,22 +42,36 @@ class Achievement
     private ?\DateTimeImmutable $updatedAt = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getAchievements"])]
+    #[Groups(["getAchievements",
+
+              "routeAchievements"
+    ])]
     private ?string $tropheeType = null;
 
     #[ORM\Column(length: 255)]
-    #[Groups(["getAchievements", "getUnlockedPicturesAchievements"])]
+    #[Groups(["getAchievements",
+              "getUnlockedPicturesAchievements",
+
+              "getInformationsCurrentUser",
+              "routeAchievements"
+    ])]
     private ?string $trophee = null;
 
     #[ORM\Column]
-    #[Groups(["getAchievements"])]
+    #[Groups(["getAchievements",
+
+              "routeAchievements"
+    ])]
     private ?bool $scalable = null;
 
     #[ORM\OneToOne(targetEntity: self::class, cascade: ['persist', 'remove'])]
     private ?self $previousStep = null;
 
     #[ORM\OneToOne(targetEntity: self::class, cascade: ['persist', 'remove'])]
-    #[Groups(["getAchievements"])]
+    #[Groups(["getAchievements",
+
+              "routeAchievements"
+    ])]
     private ?self $nextStep = null;
 
     /**
@@ -58,7 +81,10 @@ class Achievement
     private Collection $users;
 
     #[ORM\Column(type: Types::TEXT)]
-    #[Groups(["getAchievements"])]
+    #[Groups(["getAchievements",
+
+              "routeAchievements"
+    ])]
     private ?string $description = null;
 
     #[ORM\Column(length: 255)]

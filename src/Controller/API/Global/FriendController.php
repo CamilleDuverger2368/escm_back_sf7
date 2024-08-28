@@ -1,10 +1,9 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\API\Global;
 
 use App\Entity\Friendship;
 use App\Entity\User;
-use App\Repository\UserRepository;
 use App\Service\AchievementService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,20 +21,17 @@ class FriendController extends AbstractController
 {
     private SerializerInterface $serializer;
     private UserService $userService;
-    private UserRepository $userRep;
     private EntityManagerInterface $em;
     private AchievementService $achievementService;
 
     public function __construct(
         SerializerInterface $serializer,
         UserService $userService,
-        UserRepository $userRep,
         EntityManagerInterface $em,
         AchievementService $achievementService
     ) {
         $this->serializer = $serializer;
         $this->userService = $userService;
-        $this->userRep = $userRep;
         $this->em = $em;
         $this->achievementService = $achievementService;
     }
@@ -52,16 +48,13 @@ class FriendController extends AbstractController
     #[Route("/finder", name: "finder", methods: ["GET"])]
     public function findFriends(Request $request): JsonResponse
     {
-        if (null === $user = $this->getUser()) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_UNAUTHORIZED]);
-        }
-        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
 
         $search = $request->query->get("search");
 
-        $users = $this->userService->getUsersByNameOrPseudo($search, $realUser);
+        $users = $this->userService->getUsersByNameOrPseudo($search, $user);
 
         $json = $this->serializer->serialize($users, "json", ["groups" => "findFriends"]);
 
@@ -80,14 +73,16 @@ class FriendController extends AbstractController
     #[Route("/asking/{id}", name: "asking", methods: ["POST"])]
     public function askingForFriendship(User $receiver): JsonResponse
     {
-        if (null === $user = $this->getUser()) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_UNAUTHORIZED]);
-        }
-        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
 
-        $json = $this->userService->friendRequest($realUser, $receiver);
+        $asking = $this->userService->friendRequest($user, $receiver);
+
+        $this->em->persist($asking);
+        $this->em->flush();
+
+        $json = $this->serializer->serialize($asking, "json", ["groups" => "getAlterUser"]);
 
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
@@ -104,12 +99,17 @@ class FriendController extends AbstractController
     #[Route("/decline/{id}", name: "decline", methods: ["DELETE"])]
     public function declineRequestFriendship(Friendship $friendship): JsonResponse
     {
-        if (null === $user = $this->getUser()) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_UNAUTHORIZED]);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
 
         $this->em->remove($friendship);
         $this->em->flush();
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
@@ -126,14 +126,20 @@ class FriendController extends AbstractController
     #[Route("/accept/{id}", name: "accept", methods: ["PUT"])]
     public function acceptRequestFriendship(Friendship $friendship): JsonResponse
     {
-        if (null === $this->getUser()) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_UNAUTHORIZED]);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
 
         $friendship->setFriend(true);
         $friendship->setSince(new \DateTime());
+
         $this->em->persist($friendship);
         $this->em->flush();
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
 
         return new JsonResponse(null, Response::HTTP_OK);
     }
@@ -148,19 +154,12 @@ class FriendController extends AbstractController
     #[Route("/list", name: "list", methods: ["GET"])]
     public function getRequestsAndFriendships(): JsonResponse
     {
-        if (null === $user = $this->getUser()) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_UNAUTHORIZED]);
-        }
-        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
 
-        $json = $this->userService->getRequestsAndFriendships($realUser);
-
-        // Check achievements
-        if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $user)) > 0) {
-            $this->achievementService->checkToUnlockAchievements($user, $achievements);
-        }
+        $data = $this->userService->getRequestsAndFriendships($user);
+        $json = $this->serializer->serialize($data, "json", ["groups" => "getRequestsAndFriendships"]);
 
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }

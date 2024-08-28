@@ -91,6 +91,20 @@ class AchievementService
     }
 
     /**
+     * Get unlocked element for  user
+     *
+     * @param User $user current user
+     * @param string $element type of trophee
+     *
+     * @return array<Achievement>
+     */
+    public function getUnlockedElements(User $user, string $element): array
+    {
+        $achievements = $this->achievementRep->getUnlockedElements($user, $element);
+        return $achievements;
+    }
+
+    /**
      * Get unlocked objects3D for current user
      *
      * @param User $user current user
@@ -318,9 +332,6 @@ class AchievementService
         $complete = true;
 
         if ($user->getPseudo() === null) {
-            $complete = false;
-        }
-        if ($user->getAge() === null) {
             $complete = false;
         }
         if ($user->getPronouns() === null) {

@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\API\Global;
 
 use App\Entity\Avatar;
 use App\Entity\User;
 use App\Repository\CityRepository;
 use App\Repository\UserRepository;
 use App\Service\AchievementService;
+use App\Service\AvatarService;
 use App\Service\MailerService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -30,6 +31,7 @@ class UserUnlogController extends AbstractController
     private MailerService $mailerService;
     private ValidatorInterface $validator;
     private UserService $userService;
+    private AvatarService $avatarService;
 
     public function __construct(
         UserRepository $userRep,
@@ -39,7 +41,8 @@ class UserUnlogController extends AbstractController
         EntityManagerInterface $em,
         MailerService $mailerService,
         ValidatorInterface $validator,
-        UserService $userService
+        UserService $userService,
+        AvatarService $avatarService
     ) {
         $this->userRep = $userRep;
         $this->cityRep = $cityRep;
@@ -49,6 +52,7 @@ class UserUnlogController extends AbstractController
         $this->mailerService = $mailerService;
         $this->validator = $validator;
         $this->userService = $userService;
+        $this->avatarService = $avatarService;
     }
 
     /**
@@ -69,6 +73,7 @@ class UserUnlogController extends AbstractController
         if ($errors->count() > 0) {
             return new JsonResponse($this->serializer->serialize($errors, "json"), Response::HTTP_BAD_REQUEST);
         }
+        // WIP !!!
         if ($message = $this->userService->checkInformationsUser($user, $request->toArray()) !== null) {
             return new JsonResponse(["message" => $message, Response::HTTP_BAD_REQUEST]);
         }
@@ -78,9 +83,7 @@ class UserUnlogController extends AbstractController
         $this->em->persist($user);
 
         // Create user's avatar
-        $avatar = new Avatar();
-        $avatar->setCreatedAt(new \DateTimeImmutable());
-        $avatar->setUser($user);
+        $avatar = $this->avatarService->createAvatar($user);
         $this->em->persist($avatar);
 
         $this->em->flush();
@@ -121,13 +124,9 @@ class UserUnlogController extends AbstractController
     #[Route("/validation/{link}", name: "validation", methods: ["GET"])]
     public function validateEmail(string $link): RedirectResponse | JsonResponse
     {
-        if (!$user = $this->userRep->findOneBy(["link" => $link])) {
+        if (!$user = $this->userService->validateEmail($link)) {
             return new JsonResponse(["message" => "can't find this user", Response::HTTP_BAD_REQUEST]);
         }
-
-        $user->setValidated(true);
-        $user->setLink($user->getName());
-        $user->setRoles(["ROLE_USER"]);
 
         $this->em->persist($user);
         $this->em->flush();

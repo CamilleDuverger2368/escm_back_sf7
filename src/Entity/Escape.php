@@ -18,7 +18,11 @@ class Escape
     #[Groups(["getEscape",
               "getList",
               "finder",
-              "getSessions"
+              "getSessions",
+
+
+              "routeEscape",
+              "routeLists"
     ])]
     private ?int $id = null;
 
@@ -28,51 +32,77 @@ class Escape
               "getList",
               "finder",
               "getAlterUser",
-              "getSessions"
+              "getSessions",
+
+
+              "routeEscape",
+              "routeLists",
+              "routeAlterUser"
     ])]
     private ?string $name = null;
 
     #[ORM\Column]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
     #[Groups(["getEscape",
-              "finder"
+              "finder",
+
+
+              "routeEscape"
     ])]
     private ?int $time = null;
 
     #[ORM\Column]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
     #[Groups(["getEscape",
-              "finder"
+              "finder",
+
+
+              "routeEscape"
     ])]
     private ?int $minPlayer = null;
 
     #[ORM\Column]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
     #[Groups(["getEscape",
-              "finder"
+              "finder",
+
+
+              "routeEscape"
     ])]
     private ?int $maxPlayer = null;
 
     #[ORM\Column]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private ?int $level = null;
 
     #[ORM\Column(nullable: true)]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private ?int $price = null;
 
     #[ORM\Column(nullable: true)]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private ?int $age = null;
 
     /**
      * @var Collection<int, Entreprise> $entreprises escape's entreprises
      */
     #[ORM\ManyToMany(targetEntity: Entreprise::class, inversedBy: "escapes")]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private Collection $entreprises;
 
     /**
@@ -97,7 +127,10 @@ class Escape
      * @var Collection<int, Tag> $tags escape's tags
      */
     #[ORM\ManyToMany(targetEntity: Tag::class)]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private Collection $tags;
 
     /**
@@ -110,18 +143,28 @@ class Escape
      * @var Collection<int, ListFavori> $listFavoris escape's favoris
      */
     #[ORM\OneToMany(mappedBy: "escape", targetEntity: ListFavori::class)]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+
+              "routeEscape"
+    ])]
     private Collection $listFavoris;
 
     /**
      * @var Collection<int, ListToDo> $listToDos escape's to-dos
      */
     #[ORM\OneToMany(mappedBy: "escape", targetEntity: ListToDo::class)]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private Collection $listToDos;
 
     #[ORM\Column]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private ?bool $actual = null;
 
     public function __construct()

@@ -3,8 +3,12 @@
 namespace App\Service;
 
 use App\Entity\City;
+use App\Entity\Description;
 use App\Entity\Entreprise;
 use App\Entity\Escape;
+use App\Entity\Link;
+use App\Entity\ListFavori;
+use App\Entity\ListToDo;
 use App\Entity\User;
 use App\Repository\DescriptionRepository;
 use App\Repository\EntrepriseRepository;
@@ -48,6 +52,134 @@ class EscapeService
         $this->entrepriseRep = $entrepriseRep;
         $this->escapeRep = $escapeRep;
         $this->serializer = $serializer;
+    }
+
+    /**
+     * Get description by entreprise
+     *
+     * @param City $city user's city
+     * @param Escape $escape escape
+     * @param Entreprise $entreprise entreprise of the escape
+     *
+     * @return Description|null
+     */
+    public function getDescriptionOfEntreprise(City $city, Escape $escape, Entreprise $entreprise): ?Description
+    {
+        return $this->descriptionRep->getDescriptionByCityAndEscapeAndEntreprise(
+            $city,
+            $escape,
+            $entreprise
+        );
+    }
+
+    /**
+     * Get first description
+     *
+     * @param City $city user's city
+     * @param Escape $escape escape
+     *
+     * @return Description|null
+     */
+    public function getFirstDescription(City $city, Escape $escape): ?Description
+    {
+        return $this->descriptionRep->getDescriptionByCityAndEscape($city, $escape)[0];
+    }
+
+    /**
+     * Get link by entreprise
+     *
+     * @param City $city user's city
+     * @param Escape $escape escape
+     * @param Entreprise $entreprise entreprise of the escape
+     *
+     * @return Link|null
+     */
+    public function getLinkOfEntreprise(City $city, Escape $escape, Entreprise $entreprise): ?Link
+    {
+        return $this->linkRep->getLinkByCityAndEscapeAndEntreprise(
+            $city,
+            $escape,
+            $entreprise
+        );
+    }
+
+    /**
+     * Get first link
+     *
+     * @param City $city user's city
+     * @param Escape $escape escape
+     *
+     * @return Link|null
+     */
+    public function getFirstLink(City $city, Escape $escape): ?Link
+    {
+        return $this->linkRep->getLinkByCityAndEscape($city, $escape)[0];
+    }
+
+    /**
+     * Get escape's average and number of votes
+     *
+     * @param Escape $escape escape
+     *
+     * @return array<int>
+     */
+    public function getAverageAndVotes(Escape $escape): array
+    {
+        $grades = $escape->getGrades();
+        $sum = 0;
+        $frequency = 0;
+        foreach ($grades as $grade) {
+            $sum += $grade->getGrade();
+            $frequency++;
+        }
+        if ($frequency != 0) {
+            $average = round($sum / $frequency);
+        } else {
+            $average = 0;
+        }
+
+        return ["average" => $average, "votes" => $frequency];
+    }
+
+    /**
+     * Knowing if escape is in user's to-do list
+     *
+     * @param User $user user
+     * @param Escape $escape escape
+     *
+     * @return ListToDo|null
+     */
+    public function knowIfIsToDo(User $user, Escape $escape): ?ListToDo
+    {
+        return $this->todoRep->isItAlreadyInList($user, $escape);
+    }
+
+    /**
+     * Knowing if escape is in user's favori list
+     *
+     * @param User $user user
+     * @param Escape $escape escape
+     *
+     * @return ListFavori|null
+     */
+    public function knowIfIsFavorite(User $user, Escape $escape): ?ListFavori
+    {
+        return $this->favoriRep->isItAlreadyInList($user, $escape);
+    }
+
+    /**
+     * Get User's grade
+     *
+     * @param User $user user
+     * @param Escape $escape escape
+     *
+     * @return int|null
+     */
+    public function getUserGrade(User $user, Escape $escape): ?int
+    {
+        $grade = $this->gradeRep->getGradeByUserAndEscape($user, $escape);
+
+        return $grade ? $grade->getGrade() : null;
     }
 
     /**

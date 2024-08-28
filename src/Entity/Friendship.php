@@ -14,31 +14,37 @@ class Friendship
     #[ORM\GeneratedValue]
     #[ORM\Column]
     #[Groups(["getAlterUser",
-              "getRequestsAndFriendships"
+              "getRequestsAndFriendships",
+              "routeAlterUser"
     ])]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    #[Groups(["getAlterUser"])]
+    #[Groups(["getAlterUser",
+              "routeAlterUser"
+    ])]
     private ?\DateTimeInterface $since = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(["getAlterUser",
-              "getRequestsAndFriendships"
+              "getRequestsAndFriendships",
+              "routeAlterUser"
     ])]
     private ?User $sender = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(["getAlterUser",
-              "getRequestsAndFriendships"
+              "getRequestsAndFriendships",
+              "routeAlterUser"
     ])]
     private ?User $receiver = null;
 
     #[ORM\Column]
     #[Groups(["getAlterUser",
-            "getRequestsAndFriendships"
+              "getRequestsAndFriendships",
+              "routeAlterUser"
     ])]
     private ?bool $friend = null;
 

@@ -15,23 +15,39 @@ class DoneSession
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getSessions"])]
+    #[Groups(["getSessions",
+
+              "routeEscape",
+              "routeLists"
+    ])]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    #[Groups(["getSessions"])]
+    #[Groups(["getSessions",
+
+              "routeEscape",
+              "routeLists"
+    ])]
     private ?\DateTimeInterface $playedAt = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(["getSessions"])]
+    #[Groups(["getSessions",
+
+
+              "routeLists"
+    ])]
     private ?Escape $escape = null;
 
     /**
      * @var Collection<int, User>
      */
     #[ORM\ManyToMany(targetEntity: User::class)]
-    #[Groups(["getSessions"])]
+    #[Groups(["getSessions",
+
+              "routeEscape",
+              "routeLists"
+    ])]
     private Collection $members;
 
     public function __construct()

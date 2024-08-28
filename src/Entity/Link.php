@@ -17,7 +17,10 @@ class Link
 
     #[ORM\Column(length: 500)]
     #[Assert\NotBlank(message:"Link can't be blanck")]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private ?string $link = null;
 
     #[ORM\ManyToOne]

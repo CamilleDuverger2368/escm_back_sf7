@@ -13,21 +13,42 @@ class ListFavori
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getList", "getEscape"])]
+    #[Groups(["getList",
+              "getEscape",
+
+              "routeEscape",
+              "routeLists"
+    ])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: "listFavoris")]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: "listFavoris")]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(["getList", "getAlterUser"])]
+    #[Groups(["getList",
+              "getAlterUser",
+
+
+              "routeLists",
+              "routeAlterUser"
+    ])]
     private ?Escape $escape = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    #[Groups(["getList", "getEscape", "getAlterUser"])]
+    #[Groups(["getList",
+              "getEscape",
+              "getAlterUser",
+
+              "routeEscape",
+              "routeLists",
+              "routeAlterUser"
+    ])]
     private ?\DateTimeInterface $since = null;
 
     public function getId(): ?int

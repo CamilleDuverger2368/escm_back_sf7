@@ -12,35 +12,60 @@ class Avatar
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getAvatar"])]
+    #[Groups(["getAvatar",
+
+              "routeAchievements"
+    ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["getAvatar"])]
+    #[Groups(["getAvatar",
+
+              "routeAchievements"
+    ])]
     private ?string $title = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["getAvatar"])]
+    #[Groups(["getAvatar",
+
+              "routeAchievements"
+    ])]
     private ?string $hat = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["getAvatar"])]
+    #[Groups(["getAvatar",
+
+              "routeAchievements"
+    ])]
     private ?string $suit = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["getAvatar"])]
+    #[Groups(["getAvatar",
+
+              "routeAchievements"
+    ])]
     private ?string $goodie = null;
 
     #[ORM\OneToOne(inversedBy: 'avatar', cascade: ['persist', 'remove'])]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(["getAvatar",
+
+              "routeAchievements"
+    ])]
     private ?User $user = null;
 
     #[ORM\Column]
-    #[Groups(["getAvatar"])]
+    #[Groups(["getAvatar",
+
+              "routeAchievements"
+    ])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(nullable: true)]
-    #[Groups(["getAvatar"])]
+    #[Groups(["getAvatar",
+
+              "routeAchievements"
+    ])]
     private ?\DateTimeImmutable $updatedAt = null;
 
     public function getId(): ?int

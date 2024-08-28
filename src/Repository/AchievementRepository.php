@@ -85,6 +85,25 @@ class AchievementRepository extends ServiceEntityRepository
 
     /**
      * @param User $user current user
+     * @param string $element type of trophee
+     *
+     * @return array<Achievement>
+     */
+    public function getUnlockedElements(User $user, string $element)
+    {
+        return $this->createQueryBuilder('a')
+                    ->select("a.trophee")
+                    ->andWhere(":user MEMBER OF a.users")
+                    ->andWhere(":trophee_type = a.tropheeType")
+                    ->setParameter("user", $user)
+                    ->setParameter("trophee_type", $element)
+                    ->getQuery()
+                    ->getResult()
+        ;
+    }
+
+    /**
+     * @param User $user current user
      *
      * @return array<Achievement>
      */

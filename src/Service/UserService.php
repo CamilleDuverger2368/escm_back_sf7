@@ -8,7 +8,7 @@ use App\Repository\CityRepository;
 use App\Repository\DoneSessionRepository;
 use App\Repository\FriendshipRepository;
 use App\Repository\UserRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -19,8 +19,8 @@ class UserService
     private UserRepository $userRep;
     private FriendshipRepository $friendshipRep;
     private SerializerInterface $serializer;
-    private EntityManagerInterface $em;
     private DoneSessionRepository $sessionRep;
+    private Security $security;
 
     public function __construct(
         CityRepository $cityRep,
@@ -28,18 +28,19 @@ class UserService
         UserRepository $userRep,
         FriendshipRepository $friendshipRep,
         SerializerInterface $serializer,
-        EntityManagerInterface $em,
-        DoneSessionRepository $sessionRep
+        DoneSessionRepository $sessionRep,
+        Security $security
     ) {
         $this->cityRep = $cityRep;
         $this->userPasswordHasher = $userPasswordHasher;
         $this->userRep = $userRep;
         $this->friendshipRep = $friendshipRep;
         $this->serializer = $serializer;
-        $this->em = $em;
         $this->sessionRep = $sessionRep;
+        $this->security = $security;
     }
 
+    // WIP !!!
     /**
      * Check user's informations
      *
@@ -70,6 +71,7 @@ class UserService
         return null;
     }
 
+    // WIP !!!
     /**
      * Check user's informations for update
      *
@@ -92,6 +94,7 @@ class UserService
         return null;
     }
 
+    // WIP !!!
     /**
      * Update user's password
      *
@@ -189,42 +192,16 @@ class UserService
      * @param User $sender current user
      * @param User $receiver futur friend ?
      *
-     * @return string
+     * @return Friendship
      */
-    public function friendRequest(User $sender, User $receiver): string
+    public function friendRequest(User $sender, User $receiver): Friendship
     {
         $asking = new Friendship();
         $asking->setSender($sender);
         $asking->setReceiver($receiver);
         $asking->setFriend(false);
 
-        $this->em->persist($asking);
-        $this->em->flush();
-
-        $json = $this->serializer->serialize($asking, "json", ["groups" => "getAlterUser"]);
-
-        return $json;
-    }
-
-    /**
-     * Get alter profil
-     *
-     * @param User $current current user
-     * @param User $user alter user
-     *
-     * @return string
-     */
-    public function getAlterProfil(User $current, User $user): ?string
-    {
-        $friendship = $this->friendshipRep->searchStatusFriendship($current, $user);
-        $data = array_merge(
-            ["user" => $user],
-            ["friendship" => $friendship]
-        );
-
-        $json = $this->serializer->serialize($data, "json", ["groups" => "getAlterUser"]);
-
-        return $json;
+        return $asking;
     }
 
     /**
@@ -232,9 +209,9 @@ class UserService
      *
      * @param User $user current user
      *
-     * @return string
+     * @return array{asking: Friendship, friendships: Friendship}
      */
-    public function getRequestsAndFriendships(User $user): ?string
+    public function getRequestsAndFriendships(User $user): array
     {
         $friends = $this->friendshipRep->getAllFriendships($user);
         $friendships = [];
@@ -249,8 +226,64 @@ class UserService
             ["friendships" => $friendships]
         );
 
-        $json = $this->serializer->serialize($data, "json", ["groups" => "getRequestsAndFriendships"]);
+        return $data;
+    }
 
-        return $json;
+    /**
+     * Validate Email
+     *
+     * @param string $link
+     *
+     * @return User|null
+     */
+    public function validateEmail(string $link): ?User
+    {
+        if (!$user = $this->userRep->findOneBy(["link" => $link])) {
+            return null;
+        }
+
+        $user->setValidated(true);
+        $user->setLink($user->getName());
+        $user->setRoles(["ROLE_USER"]);
+
+        return $user;
+    }
+
+    /**
+     * Get real current user
+     *
+     * @return User|string
+     */
+    public function getRealCurrentUser(): User | string
+    {
+        if (!$user = $this->security->getUser()) {
+            return "There is no current user.";
+        }
+        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
+            return "Current user not found.";
+        }
+        return $realUser;
+    }
+
+    /**
+     * Get list of users
+     *
+     * @return array<int, User>
+     */
+    public function getListUsers(): array
+    {
+        return $this->userRep->findAll();
+    }
+
+    /**
+     * Get user's profil
+     *
+     * @param User $user user
+     *
+     * @return string
+     */
+    public function getUserProfil(User $user): string
+    {
+        return $user->getProfil();
     }
 }

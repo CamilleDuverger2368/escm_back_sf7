@@ -25,7 +25,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
               "getListUsers",
               "findFriends",
               "getRequestsAndFriendships",
-              "getSessions"
+              "getSessions",
+
+              "getInformationsCurrentUser",
+              "routeEscape",
+              "routeLists",
+              "routeAlterUser"
     ])]
     private ?int $id = null;
 
@@ -38,7 +43,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
               "getListUsers",
               "getMessages",
               "getRequestsAndFriendships",
-              "getSessions"
+              "getSessions",
+
+              "getInformationsCurrentUser",
+              "routeEscape",
+              "routeLists",
+              "routeAlterUser"
     ])]
     private string $email = '';
 
@@ -77,7 +87,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
               "getListUsers",
               "findFriends",
               "getRequestsAndFriendships",
-              "getSessions"
+              "getSessions",
+
+
+              "getInformationsCurrentUser",
+              "routeEscape",
+              "routeLists",
+              "routeAlterUser"
     ])]
     private string $name = '';
 
@@ -99,7 +115,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
               "getListUsers",
               "findFriends",
               "getRequestsAndFriendships",
-              "getSessions"
+              "getSessions",
+
+
+
+              "getInformationsCurrentUser",
+              "routeEscape",
+              "routeLists",
+              "routeAlterUser"
     ])]
     private string $firstname = '';
 
@@ -112,21 +135,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
               "getListUsers",
               "findFriends",
               "getRequestsAndFriendships",
-              "getSessions"
+              "getSessions",
+
+
+              "getInformationsCurrentUser",
+              "routeEscape",
+              "routeLists",
+              "routeAlterUser"
     ])]
     private ?string $pseudo = null;
-
-    #[ORM\Column(nullable: true)]
-    #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getCurrent",
-              "getAlterUser"
-    ])]
-    private ?int $age = null;
 
     #[ORM\Column(type: "float", nullable: true)]
     #[Assert\Type(type: "float", message: "{{ value }} is not a valid {{ type }}")]
     #[Groups(["getCurrent",
-              "getAlterUser"
+              "getAlterUser",
+
+
+              "getInformationsCurrentUser",
+              "routeAlterUser"
     ])]
     private ?float $level = null;
 
@@ -136,7 +162,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["getCurrent",
               "getAlterUser",
               "getRoom",
-              "getMessages"
+              "getMessages",
+
+
+              "getInformationsCurrentUser",
+              "routeAlterUser"
     ])]
     private ?string $pronouns = null;
 
@@ -144,7 +174,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Type(type: "string", message: "{{ value }} is not a valid {{ type }}")]
     #[Assert\Regex(pattern: "/\d/", match: false, message: "Profil cannot contain a number")]
     #[Groups(["getCurrent",
-              "getAlterUser"
+              "getAlterUser",
+
+
+              "getInformationsCurrentUser",
+              "getAvatar",
+              "routeAchievements",
+              "routeAlterUser"
     ])]
     private ?string $profil = null;
 
@@ -152,7 +188,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\JoinColumn(nullable: false)]
     #[Assert\Type(City::class)]
     #[Groups(["getCurrent",
-              "getAlterUser"
+              "getAlterUser",
+
+
+              "getInformationsCurrentUser",
+              "routeAlterUser"
     ])]
     private ?City $city = null;
 
@@ -166,14 +206,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, ListFavori> user's list favori
      */
     #[ORM\OneToMany(mappedBy: "user", targetEntity: ListFavori::class, orphanRemoval: true)]
-    #[Groups(["getAlterUser"])]
+    #[Groups(["getAlterUser",
+
+
+
+              "routeAlterUser"
+    ])]
     private Collection $listFavoris;
 
     /**
      * @var Collection<int, ListToDo> user's list to-do
      */
     #[ORM\OneToMany(mappedBy: "user", targetEntity: ListToDo::class, orphanRemoval: true)]
-    #[Groups(["getAlterUser"])]
+    #[Groups(["getAlterUser",
+
+
+
+              "routeAlterUser"
+    ])]
     private Collection $listToDos;
 
     /**
@@ -195,19 +245,31 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["getCurrent",
               "getAlterUser",
               "findFriends",
-              "getRequestsAndFriendships"
+              "getRequestsAndFriendships",
+
+
+              "getInformationsCurrentUser",
+              "routeAlterUser"
     ])]
     private ?string $profilPic = null;
 
     #[ORM\Column(nullable: true)]
     #[Groups(["getCurrent",
-              "getAlterUser"
+              "getAlterUser",
+
+
+              "getInformationsCurrentUser",
+              "routeAlterUser"
     ])]
     private ?\DateTimeImmutable $birthday = null;
 
     #[ORM\Column]
     #[Groups(["getCurrent",
-              "getAlterUser"
+              "getAlterUser",
+
+
+              "getInformationsCurrentUser",
+              "routeAlterUser"
     ])]
     private ?\DateTimeImmutable $createdAt = null;
 
@@ -333,18 +395,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPseudo(?string $pseudo): static
     {
         $this->pseudo = $pseudo;
-
-        return $this;
-    }
-
-    public function getAge(): ?int
-    {
-        return $this->age;
-    }
-
-    public function setAge(?int $age): static
-    {
-        $this->age = $age;
 
         return $this;
     }

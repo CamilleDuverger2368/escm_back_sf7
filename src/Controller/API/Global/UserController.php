@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\API\Global;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
@@ -41,7 +41,7 @@ class UserController extends AbstractController
         AchievementService $achievementService,
         UserRepository $userRep,
         MailerService $mailerService,
-        ValidatorInterface $validator
+        ValidatorInterface $validator,
     ) {
         $this->security = $security;
         $this->em = $em;
@@ -61,15 +61,13 @@ class UserController extends AbstractController
     #[Route("/logout", name: "logout", methods: ["PUT"])]
     public function logout(): JsonResponse
     {
-        if (null === $user = $this->getUser()) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_UNAUTHORIZED]);
-        }
-        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
 
-        $realUser->setApiToken(null);
-        $this->em->persist($realUser);
+        $user->setApiToken(null);
+
+        $this->em->persist($user);
         $this->em->flush();
 
         return new JsonResponse(null, Response::HTTP_OK);
@@ -103,9 +101,6 @@ class UserController extends AbstractController
     #[Route("/list", name: "list", methods: ["GET"])]
     public function getUsers(): JsonResponse
     {
-        if (!$this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
         $users = $this->userRep->findAll();
         $json = $this->serializer->serialize($users, "json", ["groups" => "getListUsers"]);
 
@@ -124,10 +119,6 @@ class UserController extends AbstractController
     #[Route("/{id}", name: "update", methods: ["PUT"])]
     public function updateCurrentUser(Request $request, User $user): JsonResponse
     {
-        // if (!$user = $this->security->getUser()) {
-        //     return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        // }
-
         $userUp = $this->serializer->deserialize(
             $request->getContent(),
             User::class,
@@ -167,12 +158,10 @@ class UserController extends AbstractController
     #[Route("/password/{id}", name: "password_update", methods: ["PUT"])]
     public function updatePasswordCurrentUser(Request $request, User $user): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
-        }
+
         $content = $request->toArray();
         if ($message = $this->userService->updatePasswordCurrentUser($user, $content)) {
             return new JsonResponse(["message" => $message, Response::HTTP_BAD_REQUEST]);
@@ -184,33 +173,5 @@ class UserController extends AbstractController
         $this->em->flush();
 
         return new JsonResponse(["message" => "user's password updated", Response::HTTP_OK]);
-    }
-
-    /**
-     * Return user with this id
-     *
-     * @param User $user user to return
-     *
-     * @api GET
-     *
-     * @return JsonResponse
-     */
-    #[Route("/alter/{id}", name: "alter", methods: ["GET"])]
-    public function getAlterUser(User $user): JsonResponse
-    {
-        if (!$current = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-        if (null === $realUser = $this->userRep->findOneBy(["email" => $current->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
-        }
-        $json = $this->userService->getAlterProfil($realUser, $user);
-
-        // Check achievements
-        if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $realUser)) > 0) {
-            $this->achievementService->checkToUnlockAchievements($realUser, $achievements);
-        }
-
-        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
 }
