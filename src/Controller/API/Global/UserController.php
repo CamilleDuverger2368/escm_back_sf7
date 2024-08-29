@@ -83,8 +83,8 @@ class UserController extends AbstractController
     #[Route("", name: "current", methods: ["GET"])]
     public function getCurrentUser(): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
         $json = $this->serializer->serialize($user, "json", ["groups" => "getCurrent"]);
 

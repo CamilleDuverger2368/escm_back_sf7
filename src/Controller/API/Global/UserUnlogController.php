@@ -2,7 +2,6 @@
 
 namespace App\Controller\API\Global;
 
-use App\Entity\Avatar;
 use App\Entity\User;
 use App\Repository\CityRepository;
 use App\Repository\UserRepository;
@@ -73,7 +72,7 @@ class UserUnlogController extends AbstractController
         if ($errors->count() > 0) {
             return new JsonResponse($this->serializer->serialize($errors, "json"), Response::HTTP_BAD_REQUEST);
         }
-        // WIP !!!
+
         if ($message = $this->userService->checkInformationsUser($user, $request->toArray()) !== null) {
             return new JsonResponse(["message" => $message, Response::HTTP_BAD_REQUEST]);
         }
@@ -189,21 +188,18 @@ class UserUnlogController extends AbstractController
     #[Route("/login", name: "login", methods: ["POST"])]
     public function login(): JsonResponse
     {
-        if (null === $user = $this->getUser()) {
-            return new JsonResponse(["message" => "missing credentials", Response::HTTP_UNAUTHORIZED]);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
-        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
-        }
-        if ($realUser->isValidated() === false) {
+        if ($user->isValidated() === false) {
             return new JsonResponse(["message" => "You have to validate your email.", Response::HTTP_BAD_REQUEST]);
         }
 
         $token = hash("sha256", uniqid('', true));
-        $realUser->setApiToken($token);
-        $this->em->persist($realUser);
+        $user->setApiToken($token);
+        $this->em->persist($user);
         $this->em->flush();
 
-        return new JsonResponse(["user" => $realUser->getEmail(), "token" => $token, Response::HTTP_OK]);
+        return new JsonResponse(["user" => $user->getEmail(), "token" => $token, Response::HTTP_OK]);
     }
 }

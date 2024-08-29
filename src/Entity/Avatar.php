@@ -14,35 +14,40 @@ class Avatar
     #[ORM\Column]
     #[Groups(["getAvatar",
 
-              "routeAchievements"
+              "routeAchievements",
+              "routeAlterUser"
     ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(["getAvatar",
 
-              "routeAchievements"
+              "routeAchievements",
+              "routeAlterUser"
     ])]
     private ?string $title = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(["getAvatar",
 
-              "routeAchievements"
+              "routeAchievements",
+              "routeAlterUser"
     ])]
     private ?string $hat = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(["getAvatar",
 
-              "routeAchievements"
+              "routeAchievements",
+              "routeAlterUser"
     ])]
     private ?string $suit = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(["getAvatar",
 
-              "routeAchievements"
+              "routeAchievements",
+              "routeAlterUser"
     ])]
     private ?string $goodie = null;
 
@@ -50,21 +55,24 @@ class Avatar
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(["getAvatar",
 
-              "routeAchievements"
+              "routeAchievements",
+              "routeAlterUser"
     ])]
     private ?User $user = null;
 
     #[ORM\Column]
     #[Groups(["getAvatar",
 
-              "routeAchievements"
+              "routeAchievements",
+              "routeAlterUser"
     ])]
     private ?\DateTimeImmutable $createdAt = null;
 
     #[ORM\Column(nullable: true)]
     #[Groups(["getAvatar",
 
-              "routeAchievements"
+              "routeAchievements",
+              "routeAlterUser"
     ])]
     private ?\DateTimeImmutable $updatedAt = null;
 

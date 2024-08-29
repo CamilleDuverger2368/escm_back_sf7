@@ -256,7 +256,7 @@ class WebsiteController extends AbstractController
     public function getProfilUser(User $user): JsonResponse
     {
         if (!($current = $this->userService->getRealCurrentUser()) instanceof User) {
-            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
+            return new JsonResponse(["message" => $current], Response::HTTP_BAD_REQUEST);
         }
 
         $friendship = $this->friendshipRep->searchStatusFriendship($current, $user);

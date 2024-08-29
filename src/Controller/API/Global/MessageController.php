@@ -3,12 +3,12 @@
 namespace App\Controller\API\Global;
 
 use App\Entity\Room;
+use App\Entity\User;
 use App\Repository\MessageRepository;
-use App\Repository\UserRepository;
 use App\Service\MessageService;
 use App\Service\RoomService;
+use App\Service\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,25 +21,22 @@ use Symfony\Component\Serializer\SerializerInterface;
 class MessageController extends AbstractController
 {
     private SerializerInterface $serializer;
-    private Security $security;
     private MessageService $messageService;
     private RoomService $roomService;
-    private UserRepository $userRep;
+    private UserService $userService;
     private MessageRepository $messageRep;
 
     public function __construct(
-        Security $security,
-        UserRepository $userRep,
         MessageRepository $messageRep,
         MessageService $messageService,
         RoomService $roomService,
+        UserService $userService,
         SerializerInterface $serializer
     ) {
-        $this->security = $security;
-        $this->userRep = $userRep;
         $this->messageRep = $messageRep;
         $this->messageService = $messageService;
         $this->roomService = $roomService;
+        $this->userService = $userService;
         $this->serializer = $serializer;
     }
 
@@ -53,11 +50,8 @@ class MessageController extends AbstractController
     #[Route("/unread", name:"unread_room", methods: ["GET"])]
     public function getRoomsAndUnreadMessages(): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
         $json = $this->messageService->getRoomsAndUnreadMessages($user);
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
@@ -76,11 +70,8 @@ class MessageController extends AbstractController
     #[Route("/send/{id}", name:"send", methods: ["POST"])]
     public function sendMessage(Room $room, Request $request): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
         if ($this->roomService->isMember($user, $room) === false) {
             return new JsonResponse(
@@ -111,11 +102,8 @@ class MessageController extends AbstractController
     #[Route("/{id}", name:"list_room", methods: ["GET"])]
     public function getMessages(Room $room): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
         if ($this->roomService->isMember($user, $room) === false) {
             return new JsonResponse(
@@ -140,11 +128,8 @@ class MessageController extends AbstractController
     #[Route("/read/{id}", name:"read_messages", methods: ["PUT"])]
     public function readMessages(Room $room): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
         if ($this->roomService->isMember($user, $room) === false) {
             return new JsonResponse(
