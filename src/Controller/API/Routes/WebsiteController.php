@@ -80,6 +80,7 @@ class WebsiteController extends AbstractController
 
         $usersList = $this->userService->getListUsers();
         $sessions = $this->listService->getSessionsForEscape($user, $escape);
+        $toDoList = $this->listService->getToDoListWithoutBlockedUser($user, $escape);
 
         // Merge data
         $data = array_merge(
@@ -92,7 +93,9 @@ class WebsiteController extends AbstractController
             ["isFavorite" => $isFavorite],
             ["userGrade" => $userGrade],
             ["usersList" => $usersList],
-            ["sessions" => $sessions]
+            ["sessions" => $sessions],
+            ["toDoList" => $toDoList],
+            ["favorisNumber" => count($escape->getListFavoris())]
         );
         $json = $this->serializer->serialize($data, "json", ["groups" => "routeEscape"]);
 
@@ -128,6 +131,7 @@ class WebsiteController extends AbstractController
 
         $usersList = $this->userService->getListUsers();
         $sessions = $this->listService->getSessionsForEscape($user, $escape);
+        $toDoList = $this->listService->getToDoListWithoutBlockedUser($user, $escape);
 
         // Merge data
         $data = array_merge(
@@ -140,7 +144,9 @@ class WebsiteController extends AbstractController
             ["isFavorite" => $isFavorite],
             ["userGrade" => $userGrade],
             ["usersList" => $usersList],
-            ["sessions" => $sessions]
+            ["sessions" => $sessions],
+            ["toDoList" => $toDoList],
+            ["favorisNumber" => count($escape->getListFavoris())]
         );
         $json = $this->serializer->serialize($data, "json", ["groups" => "routeEscape"]);
 
@@ -252,24 +258,58 @@ class WebsiteController extends AbstractController
      *
      * @return JsonResponse
      */
-    #[Route("/user/{id}", name: "informations_user", methods: ["GET"])]
+    #[Route("/user/{id}", name: "alter_user", methods: ["GET"])]
     public function getProfilUser(User $user): JsonResponse
     {
         if (!($current = $this->userService->getRealCurrentUser()) instanceof User) {
             return new JsonResponse(["message" => $current], Response::HTTP_BAD_REQUEST);
         }
+        if ($this->userService->isUserBlocked($current, $user)) {
+            return new JsonResponse(["message" => "Current user has been blocked by this user."], Response::HTTP_BAD_REQUEST);
+        }
 
         $friendship = $this->friendshipRep->searchStatusFriendship($current, $user);
         $avatar = $this->avatarService->getUserAvatar($user);
+        $isBlocked = $this->userService->isUserBlocked($current, $user);
 
         // Merge data
         $data = array_merge(
             ["user" => $user],
             ["friendship" => $friendship],
-            ["avatar" => $avatar]
+            ["avatar" => $avatar],
+            ["isBlocked" => $isBlocked]
         );
 
         $json = $this->serializer->serialize($data, "json", ["groups" => "routeAlterUser"]);
+
+        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
+    }
+
+    /**
+     * Route for user's friends / blocked users / request
+     *
+     * @api GET
+     *
+     * @return JsonResponse
+     */
+    #[Route("/friendships", name: "friendships", methods: ["GET"])]
+    public function getFriendshipsAndBlockedUsers(): JsonResponse
+    {
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
+        }
+
+        $data = $this->userService->getRequestsAndFriendships($user);
+        $blocked = $user->getUserBlocked();
+
+        // Merge data
+        $data = array_merge(
+            ["askings" => $data["askings"]],
+            ["friendships" => $data["friendships"]],
+            ["blocked" => $blocked]
+        );
+
+        $json = $this->serializer->serialize($data, "json", ["groups" => "getRequestsAndFriendships"]);
 
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }

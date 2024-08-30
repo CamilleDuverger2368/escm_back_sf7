@@ -174,4 +174,93 @@ class UserController extends AbstractController
 
         return new JsonResponse(["message" => "user's password updated", Response::HTTP_OK]);
     }
+
+    /**
+     * Check if current user is blocked
+     *
+     * @param User $user user
+     *
+     * @api GET
+     *
+     * @return JsonResponse
+     */
+    #[Route("/is/blocked/{id}", name: "is_user_blocked", methods: ["GET"])]
+    public function isUserBlocked(User $user): JsonResponse
+    {
+        if (!($current = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $current], Response::HTTP_BAD_REQUEST);
+        }
+
+        $isBlocked = $this->userService->isUserBlocked($current, $user);
+
+        return new JsonResponse(["isBlocked" => $isBlocked, Response::HTTP_OK]);
+    }
+
+    /**
+     * Block user
+     *
+     * @param User $user user
+     *
+     * @api PUT
+     *
+     * @return JsonResponse
+     */
+    #[Route("/block/{id}", name: "block_user", methods: ["PUT"])]
+    public function blockUser(User $user): JsonResponse
+    {
+        if (!($current = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $current], Response::HTTP_BAD_REQUEST);
+        }
+
+        $current->addUserBlocked($user);
+
+        $this->em->persist($current);
+        $this->em->flush();
+
+        return new JsonResponse(null, Response::HTTP_OK);
+    }
+
+    /**
+     * Unblock user
+     *
+     * @param User $user user
+     *
+     * @api PUT
+     *
+     * @return JsonResponse
+     */
+    #[Route("/unblock/{id}", name: "unblock_user", methods: ["PUT"])]
+    public function unblockUser(User $user): JsonResponse
+    {
+        if (!($current = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $current], Response::HTTP_BAD_REQUEST);
+        }
+
+        $current->removeUserBlocked($user);
+
+        $this->em->persist($current);
+        $this->em->flush();
+
+        return new JsonResponse(null, Response::HTTP_OK);
+    }
+
+    /**
+     * Get Blocked users by current user
+     *
+     * @api GET
+     *
+     * @return JsonResponse
+     */
+    #[Route("/blocked", name: "get_blocked_user", methods: ["GET"])]
+    public function getBlockedUsers(): JsonResponse
+    {
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
+        }
+
+        $blocked = $user->getUserBlocked();
+        $json = $this->serializer->serialize($blocked, "json", ["groups" => "getRequestsAndFriendships"]);
+
+        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
+    }
 }

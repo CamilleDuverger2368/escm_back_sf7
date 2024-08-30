@@ -276,12 +276,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
     private ?Avatar $avatar = null;
 
+    /**
+     * @var Collection<int, self>
+     */
+    #[ORM\ManyToMany(targetEntity: self::class, inversedBy: 'blockedBy')]
+    private Collection $userBlocked;
+
+    /**
+     * @var Collection<int, self>
+     */
+    #[ORM\ManyToMany(targetEntity: self::class, mappedBy: 'userBlocked')]
+    private Collection $blockedBy;
+
     public function __construct()
     {
         $this->listFavoris = new ArrayCollection();
         $this->listToDos = new ArrayCollection();
         $this->rooms = new ArrayCollection();
         $this->achievements = new ArrayCollection();
+        $this->userBlocked = new ArrayCollection();
+        $this->blockedBy = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -646,6 +660,57 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         $this->avatar = $avatar;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, self>
+     */
+    public function getUserBlocked(): Collection
+    {
+        return $this->userBlocked;
+    }
+
+    public function addUserBlocked(self $userBlocked): static
+    {
+        if (!$this->userBlocked->contains($userBlocked)) {
+            $this->userBlocked->add($userBlocked);
+        }
+
+        return $this;
+    }
+
+    public function removeUserBlocked(self $userBlocked): static
+    {
+        $this->userBlocked->removeElement($userBlocked);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, self>
+     */
+    public function getBlockedBy(): Collection
+    {
+        return $this->blockedBy;
+    }
+
+    public function addBlockedBy(self $blockedBy): static
+    {
+        if (!$this->blockedBy->contains($blockedBy)) {
+            $this->blockedBy->add($blockedBy);
+            $blockedBy->addUserBlocked($this);
+        }
+
+        return $this;
+    }
+
+    public function removeBlockedBy(self $blockedBy): static
+    {
+        if ($this->blockedBy->removeElement($blockedBy)) {
+            $blockedBy->removeUserBlocked($this);
+        }
 
         return $this;
     }

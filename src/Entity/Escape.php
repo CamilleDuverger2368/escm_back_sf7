@@ -143,21 +143,14 @@ class Escape
      * @var Collection<int, ListFavori> $listFavoris escape's favoris
      */
     #[ORM\OneToMany(mappedBy: "escape", targetEntity: ListFavori::class)]
-    #[Groups(["getEscape",
-
-
-              "routeEscape"
-    ])]
+    #[Groups(["getEscape"])]
     private Collection $listFavoris;
 
     /**
      * @var Collection<int, ListToDo> $listToDos escape's to-dos
      */
     #[ORM\OneToMany(mappedBy: "escape", targetEntity: ListToDo::class)]
-    #[Groups(["getEscape",
-
-              "routeEscape"
-    ])]
+    #[Groups(["getEscape"])]
     private Collection $listToDos;
 
     #[ORM\Column]

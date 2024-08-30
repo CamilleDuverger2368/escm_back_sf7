@@ -10,7 +10,6 @@ use App\Repository\FriendshipRepository;
 use App\Repository\UserRepository;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 
 class UserService
 {
@@ -18,7 +17,6 @@ class UserService
     private UserPasswordHasherInterface $userPasswordHasher;
     private UserRepository $userRep;
     private FriendshipRepository $friendshipRep;
-    private SerializerInterface $serializer;
     private DoneSessionRepository $sessionRep;
     private Security $security;
 
@@ -27,7 +25,6 @@ class UserService
         UserPasswordHasherInterface $userPasswordHasher,
         UserRepository $userRep,
         FriendshipRepository $friendshipRep,
-        SerializerInterface $serializer,
         DoneSessionRepository $sessionRep,
         Security $security
     ) {
@@ -35,7 +32,6 @@ class UserService
         $this->userPasswordHasher = $userPasswordHasher;
         $this->userRep = $userRep;
         $this->friendshipRep = $friendshipRep;
-        $this->serializer = $serializer;
         $this->sessionRep = $sessionRep;
         $this->security = $security;
     }
@@ -285,5 +281,25 @@ class UserService
     public function getUserProfil(User $user): string
     {
         return $user->getProfil();
+    }
+
+    /**
+     * is user blocked by other user
+     *
+     * @param User $current blocked user
+     * @param User $user user
+     *
+     * @return bool
+     */
+    public function isUserBlocked(User $current, User $user): bool
+    {
+        $found = false;
+        foreach ($user->getUserBlocked() as $blocked) {
+            if ($blocked === $current) {
+                $found = true;
+                break ;
+            }
+        }
+        return $found;
     }
 }

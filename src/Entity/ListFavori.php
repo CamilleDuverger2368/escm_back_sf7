@@ -16,17 +16,13 @@ class ListFavori
     #[Groups(["getList",
               "getEscape",
 
-              "routeEscape",
               "routeLists"
     ])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(inversedBy: "listFavoris")]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(["getEscape",
-
-              "routeEscape"
-    ])]
+    #[Groups(["getEscape"])]
     private ?User $user = null;
 
     #[ORM\ManyToOne(inversedBy: "listFavoris")]
@@ -45,7 +41,6 @@ class ListFavori
               "getEscape",
               "getAlterUser",
 
-              "routeEscape",
               "routeLists",
               "routeAlterUser"
     ])]

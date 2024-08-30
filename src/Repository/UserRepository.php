@@ -47,15 +47,19 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
      */
     public function getUsersByNameOrPseudo(string $search, User $user)
     {
-        return $this->createQueryBuilder('u')
+        $qb = $this->createQueryBuilder('u')
                    ->andWhere("u.name LIKE :search")
                    ->orWhere("u.firstname LIKE :search")
                    ->orWhere("u.pseudo LIKE :search")
                    ->andWhere("u.id != :userId")
                    ->setParameter("search", '%' . $search . '%')
-                   ->setParameter("userId", $user->getId())
-                   ->getQuery()
-                   ->getResult();
+                   ->setParameter("userId", $user->getId());
+        foreach ($user->getBlockedBy() as $blocker) {
+            $qb->andWhere(":blocker != u.id")
+            ->setParameter("blocker", $blocker->getId());
+        }
+        return $qb->getQuery()
+                  ->getResult();
     }
 
 //    /**

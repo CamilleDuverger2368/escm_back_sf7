@@ -13,6 +13,7 @@ use App\Repository\ListFavoriRepository;
 use App\Repository\ListToDoRepository;
 use App\Repository\UserRepository;
 use DateTime;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
 
 class ListService
@@ -83,6 +84,21 @@ class ListService
         $toDo = $this->toDoRep->getByUser($user);
 
         return $toDo;
+    }
+
+    /**
+     * Get escape's to-dos without blocked user
+     *
+     * @param User $user user
+     * @param Escape $escape user
+     *
+     * @return array<int,ListToDo>
+     */
+    public function getToDoListWithoutBlockedUser(User $user, Escape $escape): array
+    {
+        $toDos = $this->toDoRep->getToDoListEscapeWithoutBlockUser($user, $escape);
+
+        return $toDos;
     }
 
     /**

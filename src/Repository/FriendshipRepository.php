@@ -41,11 +41,16 @@ class FriendshipRepository extends ServiceEntityRepository
      */
     public function getAllFriendships(User $user)
     {
-        return $this->createQueryBuilder('f')
+        $qb = $this->createQueryBuilder('f')
                    ->andWhere("f.friend = 1")
                    ->andWhere("f.sender = :user OR f.receiver = :user")
-                   ->setParameter("user", $user)
-                   ->getQuery()
+                   ->setParameter("user", $user);
+        foreach ($user->getBlockedBy() as $blocker) {
+            $qb->andWhere(":blocker != f.sender")
+            ->andWhere(":blocker != f.receiver")
+            ->setParameter("blocker", $blocker->getId());
+        }
+        return $qb->getQuery()
                    ->getResult();
     }
 
