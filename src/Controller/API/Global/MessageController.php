@@ -53,7 +53,8 @@ class MessageController extends AbstractController
         if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
             return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
-        $json = $this->messageService->getRoomsAndUnreadMessages($user);
+        $rooms = $this->messageService->getRoomsAndUnreadMessages($user);
+        $json = $this->serializer->serialize($rooms, "json", ["groups" => "getRoom"]);
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
 
