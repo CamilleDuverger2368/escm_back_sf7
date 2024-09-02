@@ -20,7 +20,11 @@ class Entreprise
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message:"entreprise's name can't be blanck")]
-    #[Groups(["getEscape", "finder"])]
+    #[Groups(["getEscape",
+              "finder",
+
+              "routeEscape"
+    ])]
     private ?string $name = null;
 
     /**

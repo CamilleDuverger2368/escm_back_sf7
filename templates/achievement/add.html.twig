@@ -1,0 +1,65 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Add Achievement{% endblock %}
+
+{% block body %}
+<section id="form-add-achievement" class="container">
+    {{ form_start(form) }}
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.name) }}
+            </div>
+            {{ form_widget(form.name) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.conditionType) }}
+            </div>
+            {{ form_widget(form.conditionType) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.tropheeType) }}
+            </div>
+            {{ form_widget(form.tropheeType) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.trophee) }}
+            </div>
+            {{ form_widget(form.trophee) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.scalable) }}
+            </div>
+            {{ form_widget(form.scalable) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.previousStep) }}
+            </div>
+            {{ form_widget(form.previousStep) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.nextStep) }}
+            </div>
+            {{ form_widget(form.nextStep) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.description) }}
+            </div>
+            {{ form_widget(form.description) }}
+        </div>
+        <div class="info">
+            <div class="label">
+            {{ form_label(form.checker) }}
+            </div>
+            {{ form_widget(form.checker) }}
+        </div>
+        <div class="submit-button">{{ form_row(form.enregistrer) }}</div>
+    {{ form_end(form) }}
+</section>
+{% endblock %}

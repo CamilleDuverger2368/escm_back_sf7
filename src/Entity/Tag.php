@@ -18,7 +18,10 @@ class Tag
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message:"tag's name can't be blanck")]
-    #[Groups(["getEscape", "finder"])]
+    #[Groups(["getEscape",
+              "finder",
+              "routeEscape"
+    ])]
     private ?string $name = null;
 
     public function getId(): ?int

@@ -17,13 +17,39 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getCurrent", "getEscape", "getAlterUser", "getRoom", "getMessages", "getListUsers"])]
+    #[Groups(["getCurrent",
+              "getEscape",
+              "getAlterUser",
+              "getRoom",
+              "getMessages",
+              "getListUsers",
+              "findFriends",
+              "getRequestsAndFriendships",
+              "getSessions",
+
+              "getInformationsCurrentUser",
+              "routeEscape",
+              "routeLists",
+              "routeAlterUser"
+    ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
     #[Assert\NotBlank(message: "email can't be blanck")]
     #[Assert\Email(message: "give us a valid email")]
-    #[Groups(["getCurrent", "getRoom", "getMessages"])]
+    #[Groups(["getCurrent",
+              "getAlterUser",
+              "getRoom",
+              "getListUsers",
+              "getMessages",
+              "getRequestsAndFriendships",
+              "getSessions",
+
+              "getInformationsCurrentUser",
+              "routeEscape",
+              "routeLists",
+              "routeAlterUser"
+    ])]
     private string $email = '';
 
     /**
@@ -53,7 +79,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     )]
     #[Assert\Regex(pattern: "/\d/", match: false, message: "Your name cannot contain a number")]
     #[Assert\Type(type: "string", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getCurrent", "getEscape", "getAlterUser", "getRoom", "getMessages", "getListUsers"])]
+    #[Groups(["getCurrent",
+              "getEscape",
+              "getAlterUser",
+              "getRoom",
+              "getMessages",
+              "getListUsers",
+              "findFriends",
+              "getRequestsAndFriendships",
+              "getSessions",
+
+
+              "getInformationsCurrentUser",
+              "routeEscape",
+              "routeLists",
+              "routeAlterUser"
+    ])]
     private string $name = '';
 
     #[ORM\Column(length: 255)]
@@ -66,39 +107,93 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     )]
     #[Assert\Regex(pattern: "/\d/", match: false, message: "your firstname cannot contain a number")]
     #[Assert\Type(type: "string", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getCurrent", "getEscape", "getAlterUser", "getRoom", "getMessages", "getListUsers"])]
+    #[Groups(["getCurrent",
+              "getEscape",
+              "getAlterUser",
+              "getRoom",
+              "getMessages",
+              "getListUsers",
+              "findFriends",
+              "getRequestsAndFriendships",
+              "getSessions",
+
+
+
+              "getInformationsCurrentUser",
+              "routeEscape",
+              "routeLists",
+              "routeAlterUser"
+    ])]
     private string $firstname = '';
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups(["getCurrent", "getEscape", "getAlterUser", "getRoom", "getMessages", "getListUsers"])]
-    private ?string $pseudo = null;
+    #[Groups(["getCurrent",
+              "getEscape",
+              "getAlterUser",
+              "getRoom",
+              "getMessages",
+              "getListUsers",
+              "findFriends",
+              "getRequestsAndFriendships",
+              "getSessions",
 
-    #[ORM\Column(nullable: true)]
-    #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getCurrent", "getAlterUser"])]
-    private ?int $age = null;
+
+              "getInformationsCurrentUser",
+              "routeEscape",
+              "routeLists",
+              "routeAlterUser"
+    ])]
+    private ?string $pseudo = null;
 
     #[ORM\Column(type: "float", nullable: true)]
     #[Assert\Type(type: "float", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getCurrent", "getAlterUser"])]
+    #[Groups(["getCurrent",
+              "getAlterUser",
+
+
+              "getInformationsCurrentUser",
+              "routeAlterUser"
+    ])]
     private ?float $level = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Type(type: "string", message: "{{ value }} is not a valid {{ type }}")]
     #[Assert\Regex(pattern: "/\d/", match: false, message: "Pronouns cannot contain a number")]
-    #[Groups(["getCurrent", "getAlterUser", "getRoom", "getMessages"])]
+    #[Groups(["getCurrent",
+              "getAlterUser",
+              "getRoom",
+              "getMessages",
+
+
+              "getInformationsCurrentUser",
+              "routeAlterUser"
+    ])]
     private ?string $pronouns = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Type(type: "string", message: "{{ value }} is not a valid {{ type }}")]
     #[Assert\Regex(pattern: "/\d/", match: false, message: "Profil cannot contain a number")]
-    #[Groups(["getCurrent", "getAlterUser"])]
+    #[Groups(["getCurrent",
+              "getAlterUser",
+
+
+              "getInformationsCurrentUser",
+              "getAvatar",
+              "routeAchievements",
+              "routeAlterUser"
+    ])]
     private ?string $profil = null;
 
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     #[Assert\Type(City::class)]
-    #[Groups(["getCurrent", "getAlterUser"])]
+    #[Groups(["getCurrent",
+              "getAlterUser",
+
+
+              "getInformationsCurrentUser",
+              "routeAlterUser"
+    ])]
     private ?City $city = null;
 
     #[ORM\Column]
@@ -111,22 +206,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, ListFavori> user's list favori
      */
     #[ORM\OneToMany(mappedBy: "user", targetEntity: ListFavori::class, orphanRemoval: true)]
-    #[Groups(["getAlterUser"])]
+    #[Groups(["getAlterUser",
+
+
+
+              "routeAlterUser"
+    ])]
     private Collection $listFavoris;
 
     /**
      * @var Collection<int, ListToDo> user's list to-do
      */
     #[ORM\OneToMany(mappedBy: "user", targetEntity: ListToDo::class, orphanRemoval: true)]
-    #[Groups(["getAlterUser"])]
-    private Collection $listToDos;
+    #[Groups(["getAlterUser",
 
-    /**
-     * @var Collection<int, ListDone> user's list done
-     */
-    #[ORM\OneToMany(mappedBy: "user", targetEntity: ListDone::class, orphanRemoval: true)]
-    #[Groups(["getAlterUser"])]
-    private Collection $listDones;
+
+
+              "routeAlterUser"
+    ])]
+    private Collection $listToDos;
 
     /**
      * @var Collection<int, Room> user's rooms
@@ -137,12 +235,67 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $apiToken = null;
 
+    /**
+     * @var Collection<int, Achievement>
+     */
+    #[ORM\ManyToMany(targetEntity: Achievement::class, mappedBy: 'users')]
+    private Collection $achievements;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["getCurrent",
+              "getAlterUser",
+              "findFriends",
+              "getRequestsAndFriendships",
+
+
+              "getInformationsCurrentUser",
+              "routeAlterUser"
+    ])]
+    private ?string $profilPic = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(["getCurrent",
+              "getAlterUser",
+
+
+              "getInformationsCurrentUser",
+              "routeAlterUser"
+    ])]
+    private ?\DateTimeImmutable $birthday = null;
+
+    #[ORM\Column]
+    #[Groups(["getCurrent",
+              "getAlterUser",
+
+
+              "getInformationsCurrentUser",
+              "routeAlterUser"
+    ])]
+    private ?\DateTimeImmutable $createdAt = null;
+
+    #[ORM\OneToOne(mappedBy: 'user', cascade: ['persist', 'remove'])]
+    private ?Avatar $avatar = null;
+
+    /**
+     * @var Collection<int, self>
+     */
+    #[ORM\ManyToMany(targetEntity: self::class, inversedBy: 'blockedBy')]
+    private Collection $userBlocked;
+
+    /**
+     * @var Collection<int, self>
+     */
+    #[ORM\ManyToMany(targetEntity: self::class, mappedBy: 'userBlocked')]
+    private Collection $blockedBy;
+
     public function __construct()
     {
         $this->listFavoris = new ArrayCollection();
         $this->listToDos = new ArrayCollection();
-        $this->listDones = new ArrayCollection();
         $this->rooms = new ArrayCollection();
+        $this->achievements = new ArrayCollection();
+        $this->userBlocked = new ArrayCollection();
+        $this->blockedBy = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -256,18 +409,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPseudo(?string $pseudo): static
     {
         $this->pseudo = $pseudo;
-
-        return $this;
-    }
-
-    public function getAge(): ?int
-    {
-        return $this->age;
-    }
-
-    public function setAge(?int $age): static
-    {
-        $this->age = $age;
 
         return $this;
     }
@@ -405,36 +546,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * @return Collection<int, ListDone>
-     */
-    public function getListDones(): Collection
-    {
-        return $this->listDones;
-    }
-
-    public function addListDone(ListDone $listDone): static
-    {
-        if (!$this->listDones->contains($listDone)) {
-            $this->listDones->add($listDone);
-            $listDone->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeListDone(ListDone $listDone): static
-    {
-        if ($this->listDones->removeElement($listDone)) {
-            // set the owning side to null (unless already changed)
-            if ($listDone->getUser() === $this) {
-                $listDone->setUser(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
      * @return Collection<int, Room>
      */
     public function getRooms(): Collection
@@ -469,6 +580,137 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setApiToken(?string $apiToken): static
     {
         $this->apiToken = $apiToken;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Achievement>
+     */
+    public function getAchievements(): Collection
+    {
+        return $this->achievements;
+    }
+
+    public function addAchievement(Achievement $achievement): static
+    {
+        if (!$this->achievements->contains($achievement)) {
+            $this->achievements->add($achievement);
+            $achievement->addUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAchievement(Achievement $achievement): static
+    {
+        if ($this->achievements->removeElement($achievement)) {
+            $achievement->removeUser($this);
+        }
+
+        return $this;
+    }
+
+    public function getProfilPic(): ?string
+    {
+        return $this->profilPic;
+    }
+
+    public function setProfilPic(?string $profilPic): static
+    {
+        $this->profilPic = $profilPic;
+
+        return $this;
+    }
+
+    public function getBirthday(): ?\DateTimeImmutable
+    {
+        return $this->birthday;
+    }
+
+    public function setBirthday(?\DateTimeImmutable $birthday): static
+    {
+        $this->birthday = $birthday;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTimeImmutable $createdAt): static
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function getAvatar(): ?Avatar
+    {
+        return $this->avatar;
+    }
+
+    public function setAvatar(Avatar $avatar): static
+    {
+        // set the owning side of the relation if necessary
+        if ($avatar->getUser() !== $this) {
+            $avatar->setUser($this);
+        }
+
+        $this->avatar = $avatar;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, self>
+     */
+    public function getUserBlocked(): Collection
+    {
+        return $this->userBlocked;
+    }
+
+    public function addUserBlocked(self $userBlocked): static
+    {
+        if (!$this->userBlocked->contains($userBlocked)) {
+            $this->userBlocked->add($userBlocked);
+        }
+
+        return $this;
+    }
+
+    public function removeUserBlocked(self $userBlocked): static
+    {
+        $this->userBlocked->removeElement($userBlocked);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, self>
+     */
+    public function getBlockedBy(): Collection
+    {
+        return $this->blockedBy;
+    }
+
+    public function addBlockedBy(self $blockedBy): static
+    {
+        if (!$this->blockedBy->contains($blockedBy)) {
+            $this->blockedBy->add($blockedBy);
+            $blockedBy->addUserBlocked($this);
+        }
+
+        return $this;
+    }
+
+    public function removeBlockedBy(self $blockedBy): static
+    {
+        if ($this->blockedBy->removeElement($blockedBy)) {
+            $blockedBy->removeUserBlocked($this);
+        }
 
         return $this;
     }

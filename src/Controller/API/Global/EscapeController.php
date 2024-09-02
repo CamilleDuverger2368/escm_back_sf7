@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\API\Global;
 
-use App\Entity\Entreprise;
 use App\Entity\Escape;
 use App\Entity\Grade;
+use App\Entity\User;
 use App\Repository\GradeRepository;
-use App\Repository\UserRepository;
+use App\Service\AchievementService;
 use App\Service\EscapeService;
+use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -23,31 +23,31 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 #[IsGranted("ROLE_USER")]
 class EscapeController extends AbstractController
 {
-    private Security $security;
     private SerializerInterface $serializer;
     private EscapeService $escapeService;
     private ValidatorInterface $validator;
     private EntityManagerInterface $em;
     private GradeRepository $gradeRep;
-    private UserRepository $userRep;
+    private AchievementService $achievementService;
+    private UserService $userService;
 
 
     public function __construct(
-        Security $security,
         EscapeService $escapeService,
         SerializerInterface $serializer,
         ValidatorInterface $validator,
         EntityManagerInterface $em,
         GradeRepository $gradeRep,
-        UserRepository $userRep
+        AchievementService $achievementService,
+        UserService $userService
     ) {
-        $this->security = $security;
         $this->escapeService = $escapeService;
         $this->serializer = $serializer;
         $this->validator = $validator;
         $this->em = $em;
         $this->gradeRep = $gradeRep;
-        $this->userRep = $userRep;
+        $this->achievementService = $achievementService;
+        $this->userService = $userService;
     }
 
     /**
@@ -70,11 +70,8 @@ class EscapeController extends AbstractController
         $parameters["time"] = intval($request->query->get("time"));
         $parameters["actual"] = boolval($request->query->get("actual"));
 
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
 
         if ($city = $user->getCity()) {
@@ -82,56 +79,6 @@ class EscapeController extends AbstractController
             return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
         }
         return new JsonResponse(["message" => "Current user's city not found."], Response::HTTP_BAD_REQUEST);
-    }
-
-
-    /**
-     * Return an escape by is Id and is entreprise
-     *
-     * @param Escape $escape escape to show
-     * @param Entreprise $entreprise entreprise of the escape
-     *
-     * @api GET
-     *
-     * @return JsonResponse
-     */
-    #[Route("/{id}/entreprise/{entreprise}", name: "entreprise_details", methods: ["GET"])]
-    public function getEscapeByEntreprise(Escape $escape, Entreprise $entreprise): JsonResponse
-    {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
-        }
-
-        $json = $this->escapeService->getInformationsWithEntreprise($user, $escape, $entreprise);
-
-        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
-    }
-
-    /**
-     * Return an escape by is Id
-     *
-     * @param Escape $escape escape to show
-     *
-     * @api GET
-     *
-     * @return JsonResponse
-     */
-    #[Route("/{id}", name: "details", methods: ["GET"])]
-    public function getEscape(Escape $escape): JsonResponse
-    {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
-        }
-
-        $json = $this->escapeService->getInformations($user, $escape);
-
-        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
 
     /**
@@ -147,11 +94,8 @@ class EscapeController extends AbstractController
     #[Route("/grade/{id}", name: "grade", methods: ["POST"])]
     public function gradeEscape(Request $request, Escape $escape): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
 
         $grade = $this->serializer->deserialize($request->getContent(), Grade::class, "json");
@@ -165,6 +109,11 @@ class EscapeController extends AbstractController
 
         $this->em->persist($grade);
         $this->em->flush();
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("grade", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
 
         return new JsonResponse(null, Response::HTTP_CREATED);
     }
@@ -182,11 +131,8 @@ class EscapeController extends AbstractController
     #[Route("/grade/update/{id}", name: "grade_update", methods: ["PUT"])]
     public function updateGradeEscape(Request $request, Escape $escape): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
 
         if (null === $grade = $this->gradeRep->getGradeByUserAndEscape($user, $escape)) {
@@ -200,6 +146,11 @@ class EscapeController extends AbstractController
 
         $this->em->persist($grade);
         $this->em->flush();
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("grade", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
 
         return new JsonResponse(null, Response::HTTP_CREATED);
     }
@@ -217,11 +168,8 @@ class EscapeController extends AbstractController
     #[Route("/grade/delete/{id}", name: "grade_delete", methods: ["DELETE"])]
     public function deleteGradeEscape(Request $request, Escape $escape): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
 
         if (null === $grade = $this->gradeRep->getGradeByUserAndEscape($user, $escape)) {
@@ -232,5 +180,33 @@ class EscapeController extends AbstractController
         $this->em->flush();
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Get average, votes of escape and current user's grade
+     *
+     * @param Escape $escape escape
+     *
+     * @api GET
+     *
+     * @return JsonResponse
+     */
+    #[Route("/average/{id}", name: "get_average_vote_user_grade", methods: ["GET"])]
+    public function getAverageEscapeAndCurrentUserGrade(Escape $escape): JsonResponse
+    {
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
+        }
+        $tmp = $this->escapeService->getAverageAndVotes($escape);
+        $userGrade = $this->escapeService->getUserGrade($user, $escape);
+
+        $data = array_merge(
+            ["average" => $tmp["average"]],
+            ["votes" => $tmp["votes"]],
+            ["userGrade" => $userGrade],
+        );
+        $json = $this->serializer->serialize($data, "json", ["groups" => "routeEscape"]);
+
+        return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }
 }

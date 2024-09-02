@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\API\Global;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Service\AchievementService;
+use App\Service\MailerService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -25,7 +27,9 @@ class UserController extends AbstractController
     private EntityManagerInterface $em;
     private SerializerInterface $serializer;
     private UserService $userService;
+    private AchievementService $achievementService;
     private UserRepository $userRep;
+    private MailerService $mailerService;
     private ValidatorInterface $validator;
 
 
@@ -34,14 +38,18 @@ class UserController extends AbstractController
         EntityManagerInterface $em,
         SerializerInterface $serializer,
         UserService $userService,
+        AchievementService $achievementService,
         UserRepository $userRep,
-        ValidatorInterface $validator
+        MailerService $mailerService,
+        ValidatorInterface $validator,
     ) {
         $this->security = $security;
         $this->em = $em;
         $this->serializer = $serializer;
         $this->userService = $userService;
         $this->userRep = $userRep;
+        $this->mailerService = $mailerService;
+        $this->achievementService = $achievementService;
         $this->validator = $validator;
     }
 
@@ -53,15 +61,13 @@ class UserController extends AbstractController
     #[Route("/logout", name: "logout", methods: ["PUT"])]
     public function logout(): JsonResponse
     {
-        if (null === $user = $this->getUser()) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_UNAUTHORIZED]);
-        }
-        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
 
-        $realUser->setApiToken(null);
-        $this->em->persist($realUser);
+        $user->setApiToken(null);
+
+        $this->em->persist($user);
         $this->em->flush();
 
         return new JsonResponse(null, Response::HTTP_OK);
@@ -77,8 +83,8 @@ class UserController extends AbstractController
     #[Route("", name: "current", methods: ["GET"])]
     public function getCurrentUser(): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
         $json = $this->serializer->serialize($user, "json", ["groups" => "getCurrent"]);
 
@@ -95,9 +101,6 @@ class UserController extends AbstractController
     #[Route("/list", name: "list", methods: ["GET"])]
     public function getUsers(): JsonResponse
     {
-        if (!$this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
         $users = $this->userRep->findAll();
         $json = $this->serializer->serialize($users, "json", ["groups" => "getListUsers"]);
 
@@ -116,10 +119,6 @@ class UserController extends AbstractController
     #[Route("/{id}", name: "update", methods: ["PUT"])]
     public function updateCurrentUser(Request $request, User $user): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
-        }
-
         $userUp = $this->serializer->deserialize(
             $request->getContent(),
             User::class,
@@ -138,6 +137,11 @@ class UserController extends AbstractController
         $this->em->persist($userUp);
         $this->em->flush();
 
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
+
         return new JsonResponse(["message" => "user updated", Response::HTTP_OK]);
     }
 
@@ -154,16 +158,17 @@ class UserController extends AbstractController
     #[Route("/password/{id}", name: "password_update", methods: ["PUT"])]
     public function updatePasswordCurrentUser(Request $request, User $user): JsonResponse
     {
-        if (!$user = $this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
-        if (null === $user = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "Current user not found."], Response::HTTP_BAD_REQUEST);
-        }
+
         $content = $request->toArray();
         if ($message = $this->userService->updatePasswordCurrentUser($user, $content)) {
             return new JsonResponse(["message" => $message, Response::HTTP_BAD_REQUEST]);
         }
+
+        $this->mailerService->sendMailChangePwd($user->getEmail());
+
         $this->em->persist($user);
         $this->em->flush();
 
@@ -171,21 +176,90 @@ class UserController extends AbstractController
     }
 
     /**
-     * Return user with this id
+     * Check if current user is blocked
      *
-     * @param User $user user to return
+     * @param User $user user
      *
      * @api GET
      *
      * @return JsonResponse
      */
-    #[Route("/alter/{id}", name: "alter", methods: ["GET"])]
-    public function getAlterUser(User $user): JsonResponse
+    #[Route("/is/blocked/{id}", name: "is_user_blocked", methods: ["GET"])]
+    public function isUserBlocked(User $user): JsonResponse
     {
-        if (!$this->security->getUser()) {
-            return new JsonResponse(["message" => "There is no current user."], Response::HTTP_BAD_REQUEST);
+        if (!($current = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $current], Response::HTTP_BAD_REQUEST);
         }
-        $json = $this->serializer->serialize($user, "json", ["groups" => "getAlterUser"]);
+
+        $isBlocked = $this->userService->isUserBlocked($current, $user);
+
+        return new JsonResponse(["isBlocked" => $isBlocked, Response::HTTP_OK]);
+    }
+
+    /**
+     * Block user
+     *
+     * @param User $user user
+     *
+     * @api PUT
+     *
+     * @return JsonResponse
+     */
+    #[Route("/block/{id}", name: "block_user", methods: ["PUT"])]
+    public function blockUser(User $user): JsonResponse
+    {
+        if (!($current = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $current], Response::HTTP_BAD_REQUEST);
+        }
+
+        $current->addUserBlocked($user);
+
+        $this->em->persist($current);
+        $this->em->flush();
+
+        return new JsonResponse(null, Response::HTTP_OK);
+    }
+
+    /**
+     * Unblock user
+     *
+     * @param User $user user
+     *
+     * @api PUT
+     *
+     * @return JsonResponse
+     */
+    #[Route("/unblock/{id}", name: "unblock_user", methods: ["PUT"])]
+    public function unblockUser(User $user): JsonResponse
+    {
+        if (!($current = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $current], Response::HTTP_BAD_REQUEST);
+        }
+
+        $current->removeUserBlocked($user);
+
+        $this->em->persist($current);
+        $this->em->flush();
+
+        return new JsonResponse(null, Response::HTTP_OK);
+    }
+
+    /**
+     * Get Blocked users by current user
+     *
+     * @api GET
+     *
+     * @return JsonResponse
+     */
+    #[Route("/blocked", name: "get_blocked_user", methods: ["GET"])]
+    public function getBlockedUsers(): JsonResponse
+    {
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
+        }
+
+        $blocked = $user->getUserBlocked();
+        $json = $this->serializer->serialize($blocked, "json", ["groups" => "getRequestsAndFriendships"]);
 
         return new JsonResponse($json, Response::HTTP_OK, ["accept" => "json"], true);
     }

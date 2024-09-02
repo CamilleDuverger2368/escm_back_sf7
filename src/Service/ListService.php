@@ -2,15 +2,18 @@
 
 namespace App\Service;
 
+use App\Entity\DoneSession;
 use App\Entity\User;
 use App\Entity\Escape;
-use App\Entity\ListDone;
 use App\Entity\ListFavori;
 use App\Entity\ListToDo;
-use App\Repository\ListDoneRepository;
+use App\Repository\DoneSessionRepository;
+use App\Repository\EscapeRepository;
 use App\Repository\ListFavoriRepository;
 use App\Repository\ListToDoRepository;
+use App\Repository\UserRepository;
 use DateTime;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
 
 class ListService
@@ -18,18 +21,113 @@ class ListService
     private EntityManagerInterface $em;
     private ListFavoriRepository $favoriRep;
     private ListToDoRepository $toDoRep;
-    private ListDoneRepository $doneRep;
+    private EscapeRepository $escapeRep;
+    private UserRepository $userRep;
+    private DoneSessionRepository $sessionRep;
+    private AchievementService $achievementService;
 
     public function __construct(
         EntityManagerInterface $em,
         ListFavoriRepository $favoriRep,
         ListToDoRepository $toDoRep,
-        ListDoneRepository $doneRep,
+        EscapeRepository $escapeRep,
+        UserRepository $userRep,
+        DoneSessionRepository $sessionRep,
+        AchievementService $achievementService
     ) {
         $this->em = $em;
         $this->favoriRep = $favoriRep;
         $this->toDoRep = $toDoRep;
-        $this->doneRep = $doneRep;
+        $this->escapeRep = $escapeRep;
+        $this->userRep = $userRep;
+        $this->sessionRep = $sessionRep;
+        $this->achievementService = $achievementService;
+    }
+
+    /**
+     * Update to-do list done escape is in user's to-do list
+     *
+     * @param User $user
+     * @param Escape $escape
+     */
+    public function checkAndUpdateIfDoneEscapeIsInToDoList(User $user, Escape $escape): void
+    {
+        if ($todo = $this->toDoRep->isItAlreadyInList($user, $escape)) {
+            $this->em->remove($todo);
+            $this->em->flush();
+        }
+    }
+
+    /**
+     * Get user's favoris
+     *
+     * @param User $user current user
+     *
+     * @return array<int,ListFavori>
+     */
+    public function getUserFavoris(User $user): array
+    {
+        $favoris = $this->favoriRep->getByUser($user);
+
+        return $favoris;
+    }
+
+    /**
+     * Get user's to-dos
+     *
+     * @param User $user current user
+     *
+     * @return array<int,ListToDo>
+     */
+    public function getUserToDos(User $user): array
+    {
+        $toDo = $this->toDoRep->getByUser($user);
+
+        return $toDo;
+    }
+
+    /**
+     * Get escape's to-dos without blocked user
+     *
+     * @param User $user user
+     * @param Escape $escape user
+     *
+     * @return array<int,ListToDo>
+     */
+    public function getToDoListWithoutBlockedUser(User $user, Escape $escape): array
+    {
+        $toDos = $this->toDoRep->getToDoListEscapeWithoutBlockUser($user, $escape);
+
+        return $toDos;
+    }
+
+    /**
+     * Get user's sessions
+     *
+     * @param User $user user
+     *
+     * @return array<int, DoneSession>
+     */
+    public function getUserSessions(User $user): array
+    {
+        $sessions = $this->sessionRep->findSessions($user);
+
+        return $sessions;
+    }
+
+    /**
+     * Get sessions for escape
+     *
+     * @param User $user current user
+     * @param Escape $escape escape
+     *
+     * @return array<int,DoneSession>
+     */
+    public function getSessionsForEscape(User $user, Escape $escape): array
+    {
+        $sessions = $this->sessionRep->findSessionsByEscapeAndUser($user, $escape);
+
+        return $sessions;
     }
 
     /**
@@ -37,8 +135,10 @@ class ListService
      *
      * @param User $user current user
      * @param Escape $escape escape to add
+     *
+     * @return ListFavori|null
      */
-    public function addToFavori(User $user, Escape $escape): void
+    public function addToFavori(User $user, Escape $escape): ?ListFavori
     {
         if ($this->favoriRep->isItAlreadyInList($user, $escape) === null) {
             $favori = new ListFavori();
@@ -47,9 +147,9 @@ class ListService
             $favori->setUser($user);
             $favori->setEscape($escape);
 
-            $this->em->persist($favori);
-            $this->em->flush();
+            return $favori;
         }
+        return null;
     }
 
     /**
@@ -57,8 +157,10 @@ class ListService
      *
      * @param User $user current user
      * @param Escape $escape escape to add
+     *
+     * @return ListToDo|null
      */
-    public function addToToDo(User $user, Escape $escape): void
+    public function addToToDo(User $user, Escape $escape): ?ListToDo
     {
         if ($this->toDoRep->isItAlreadyInList($user, $escape) === null) {
             $toDo = new ListToDo();
@@ -67,57 +169,55 @@ class ListService
             $toDo->setUser($user);
             $toDo->setEscape($escape);
 
-            $this->em->persist($toDo);
-            $this->em->flush();
+            return $toDo;
         }
+
+        return null;
     }
 
     /**
-     * Add an escape to current user's done
+     * Add session
      *
      * @param User $user current user
-     * @param Escape $escape escape to add
+     * @param array $informations members / date / escape
+     *
+     * @return DoneSession|string
      */
-    public function addToDone(User $user, Escape $escape): void
+    public function addSession(User $user, array $informations): DoneSession|string
     {
-        if ($this->doneRep->isItAlreadyInList($user, $escape) === null) {
-            // Create ligne in user's list
-            $done = new ListDone();
-            $now = new DateTime("now");
-            $done->setSince($now);
-            $done->setUser($user);
-            $done->setEscape($escape);
+        if (!$informations["date"]) {
+            return "Need session's date.";
+        }
+        if (!$informations["escape"]) {
+            return "Need escape to add.";
+        }
 
-            // Give some Xp to current user
-            if ($user->getLevel() == null) {
-                $user->setLevel(0.25);
-            } else {
-                $user->setLevel($user->getLevel() + 0.25);
+        $session = new DoneSession();
+        if (null === $escape = $this->escapeRep->findOneBy(["id" => $informations["escape"]])) {
+            return "Need escape to add.";
+        }
+        $session->setEscape($escape);
+        $session->addMember($user);
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("list", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
+
+        $this->checkAndUpdateIfDoneEscapeIsInToDoList($user, $escape);
+        foreach ($informations["members"] as $member) {
+            $user = $this->userRep->findOneBy(["id" => $member]);
+            $session->addMember($user);
+
+            // Check achievements
+            if (count($achievements = $this->achievementService->hasAchievementToUnlock("list", $user)) > 0) {
+                $this->achievementService->checkToUnlockAchievements($user, $achievements);
             }
 
-            $this->em->persist($done);
-            $this->em->persist($user);
-            $this->em->flush();
+            $this->checkAndUpdateIfDoneEscapeIsInToDoList($user, $escape);
         }
-    }
+        $session->setPlayedAt(new DateTime($informations["date"]));
 
-    /**
-     * Add an escape to current user's done
-     *
-     * @param User $user current user
-     * @param ListDone $done list to remove
-     */
-    public function removeFromDone(User $user, ListDone $done): void
-    {
-        // Withdraw some Xp to current user
-        if ($user->getLevel() <= 0.25) {
-            $user->setLevel(null);
-        } else {
-            $user->setLevel($user->getLevel() - 0.25);
-        }
-
-        $this->em->persist($user);
-        $this->em->remove($done);
-        $this->em->flush();
+        return $session;
     }
 }

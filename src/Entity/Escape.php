@@ -15,49 +15,94 @@ class Escape
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(["getEscape", "getList", "finder"])]
+    #[Groups(["getEscape",
+              "getList",
+              "finder",
+              "getSessions",
+
+
+              "routeEscape",
+              "routeLists"
+    ])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: "name can't be blanck")]
-    #[Groups(["getEscape", "getList", "finder", "getAlterUser"])]
+    #[Groups(["getEscape",
+              "getList",
+              "finder",
+              "getAlterUser",
+              "getSessions",
+
+
+              "routeEscape",
+              "routeLists",
+              "routeAlterUser"
+    ])]
     private ?string $name = null;
 
     #[ORM\Column]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getEscape", "finder"])]
+    #[Groups(["getEscape",
+              "finder",
+
+
+              "routeEscape"
+    ])]
     private ?int $time = null;
 
     #[ORM\Column]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getEscape", "finder"])]
+    #[Groups(["getEscape",
+              "finder",
+
+
+              "routeEscape"
+    ])]
     private ?int $minPlayer = null;
 
     #[ORM\Column]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getEscape", "finder"])]
+    #[Groups(["getEscape",
+              "finder",
+
+
+              "routeEscape"
+    ])]
     private ?int $maxPlayer = null;
 
     #[ORM\Column]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private ?int $level = null;
 
     #[ORM\Column(nullable: true)]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private ?int $price = null;
 
     #[ORM\Column(nullable: true)]
     #[Assert\Type(type: "integer", message: "{{ value }} is not a valid {{ type }}")]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private ?int $age = null;
 
     /**
      * @var Collection<int, Entreprise> $entreprises escape's entreprises
      */
     #[ORM\ManyToMany(targetEntity: Entreprise::class, inversedBy: "escapes")]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private Collection $entreprises;
 
     /**
@@ -82,7 +127,10 @@ class Escape
      * @var Collection<int, Tag> $tags escape's tags
      */
     #[ORM\ManyToMany(targetEntity: Tag::class)]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private Collection $tags;
 
     /**
@@ -105,15 +153,11 @@ class Escape
     #[Groups(["getEscape"])]
     private Collection $listToDos;
 
-    /**
-     * @var Collection<int, ListDone> $listDones escape's dones
-     */
-    #[ORM\OneToMany(mappedBy: "escape", targetEntity: ListDone::class)]
-    #[Groups(["getEscape"])]
-    private Collection $listDones;
-
     #[ORM\Column]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private ?bool $actual = null;
 
     public function __construct()
@@ -126,7 +170,6 @@ class Escape
         $this->grades = new ArrayCollection();
         $this->listFavoris = new ArrayCollection();
         $this->listToDos = new ArrayCollection();
-        $this->listDones = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -434,36 +477,6 @@ class Escape
             // set the owning side to null (unless already changed)
             if ($listToDo->getEscape() === $this) {
                 $listToDo->setEscape(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, ListDone>
-     */
-    public function getListDones(): Collection
-    {
-        return $this->listDones;
-    }
-
-    public function addListDone(ListDone $listDone): static
-    {
-        if (!$this->listDones->contains($listDone)) {
-            $this->listDones->add($listDone);
-            $listDone->setEscape($this);
-        }
-
-        return $this;
-    }
-
-    public function removeListDone(ListDone $listDone): static
-    {
-        if ($this->listDones->removeElement($listDone)) {
-            // set the owning side to null (unless already changed)
-            if ($listDone->getEscape() === $this) {
-                $listDone->setEscape(null);
             }
         }
 

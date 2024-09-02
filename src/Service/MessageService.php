@@ -67,9 +67,9 @@ class MessageService
      *
      * @param User $user current user
      *
-     * @return string
+     * @return array<string, Room>
      */
-    public function getRoomsAndUnreadMessages(User $user): string
+    public function getRoomsAndUnreadMessages(User $user): array
     {
         $result = [];
         $rooms = $this->roomRep->getRoomWhereUserIsMember($user);
@@ -90,8 +90,7 @@ class MessageService
                 $result = $tmp;
             }
         }
-        $json = $this->serializer->serialize($result, "json", ["groups" => "getRoom"]);
-        return $json;
+        return $result;
     }
 
     /**

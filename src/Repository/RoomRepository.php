@@ -29,12 +29,19 @@ class RoomRepository extends ServiceEntityRepository
      */
     public function getRoomWhereUserIsMember(User $user)
     {
-        return $this->createQueryBuilder('r')
+        $qb = $this->createQueryBuilder('r')
                     ->andWhere(":user MEMBER OF r.members")
-                    ->setParameter("user", $user)
-                    ->getQuery()
-                    ->getResult()
-        ;
+                    ->setParameter("user", $user);
+        foreach ($user->getBlockedBy() as $blocker) {
+            $qb->andWhere(":blocker MEMBER OF r.members")
+            ->setParameter("blocker", $blocker);
+        }
+        foreach ($user->getUserBlocked() as $blocked) {
+            $qb->andWhere(":blocked MEMBER OF r.members")
+            ->setParameter("blocked", $blocked);
+        }
+        return $qb->getQuery()
+                  ->getResult();
     }
 
     /**

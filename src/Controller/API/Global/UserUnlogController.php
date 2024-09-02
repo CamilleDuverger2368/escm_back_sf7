@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\API\Global;
 
 use App\Entity\User;
 use App\Repository\CityRepository;
 use App\Repository\UserRepository;
+use App\Service\AchievementService;
+use App\Service\AvatarService;
 use App\Service\MailerService;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,28 +24,34 @@ class UserUnlogController extends AbstractController
 {
     private UserRepository $userRep;
     private CityRepository $cityRep;
+    private AchievementService $achievementService;
     private SerializerInterface $serializer;
     private EntityManagerInterface $em;
     private MailerService $mailerService;
     private ValidatorInterface $validator;
     private UserService $userService;
+    private AvatarService $avatarService;
 
     public function __construct(
         UserRepository $userRep,
         CityRepository $cityRep,
+        AchievementService $achievementService,
         SerializerInterface $serializer,
         EntityManagerInterface $em,
         MailerService $mailerService,
         ValidatorInterface $validator,
-        UserService $userService
+        UserService $userService,
+        AvatarService $avatarService
     ) {
         $this->userRep = $userRep;
         $this->cityRep = $cityRep;
+        $this->achievementService = $achievementService;
         $this->serializer = $serializer;
         $this->em = $em;
         $this->mailerService = $mailerService;
         $this->validator = $validator;
         $this->userService = $userService;
+        $this->avatarService = $avatarService;
     }
 
     /**
@@ -64,6 +72,7 @@ class UserUnlogController extends AbstractController
         if ($errors->count() > 0) {
             return new JsonResponse($this->serializer->serialize($errors, "json"), Response::HTTP_BAD_REQUEST);
         }
+
         if ($message = $this->userService->checkInformationsUser($user, $request->toArray()) !== null) {
             return new JsonResponse(["message" => $message, Response::HTTP_BAD_REQUEST]);
         }
@@ -71,7 +80,17 @@ class UserUnlogController extends AbstractController
         $this->mailerService->sendMailRegister($user->getEmail(), $user->getLink());
 
         $this->em->persist($user);
+
+        // Create user's avatar
+        $avatar = $this->avatarService->createAvatar($user);
+        $this->em->persist($avatar);
+
         $this->em->flush();
+
+        // Check achievements
+        if (count($achievements = $this->achievementService->hasAchievementToUnlock("social", $user)) > 0) {
+            $this->achievementService->checkToUnlockAchievements($user, $achievements);
+        }
 
         return new JsonResponse(null, Response::HTTP_CREATED);
     }
@@ -104,13 +123,9 @@ class UserUnlogController extends AbstractController
     #[Route("/validation/{link}", name: "validation", methods: ["GET"])]
     public function validateEmail(string $link): RedirectResponse | JsonResponse
     {
-        if (!$user = $this->userRep->findOneBy(["link" => $link])) {
+        if (!$user = $this->userService->validateEmail($link)) {
             return new JsonResponse(["message" => "can't find this user", Response::HTTP_BAD_REQUEST]);
         }
-
-        $user->setValidated(true);
-        $user->setLink($user->getName());
-        $user->setRoles(["ROLE_USER"]);
 
         $this->em->persist($user);
         $this->em->flush();
@@ -173,21 +188,18 @@ class UserUnlogController extends AbstractController
     #[Route("/login", name: "login", methods: ["POST"])]
     public function login(): JsonResponse
     {
-        if (null === $user = $this->getUser()) {
-            return new JsonResponse(["message" => "missing credentials", Response::HTTP_UNAUTHORIZED]);
+        if (!($user = $this->userService->getRealCurrentUser()) instanceof User) {
+            return new JsonResponse(["message" => $user], Response::HTTP_BAD_REQUEST);
         }
-        if (null === $realUser = $this->userRep->findOneBy(["email" => $user->getUserIdentifier()])) {
-            return new JsonResponse(["message" => "curent user not found", Response::HTTP_BAD_REQUEST]);
-        }
-        if ($realUser->isValidated() === false) {
+        if ($user->isValidated() === false) {
             return new JsonResponse(["message" => "You have to validate your email.", Response::HTTP_BAD_REQUEST]);
         }
 
         $token = hash("sha256", uniqid('', true));
-        $realUser->setApiToken($token);
-        $this->em->persist($realUser);
+        $user->setApiToken($token);
+        $this->em->persist($user);
         $this->em->flush();
 
-        return new JsonResponse(["user" => $realUser->getEmail(), "token" => $token, Response::HTTP_OK]);
+        return new JsonResponse(["user" => $user->getEmail(), "token" => $token, Response::HTTP_OK]);
     }
 }

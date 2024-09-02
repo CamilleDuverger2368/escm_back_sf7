@@ -39,6 +39,34 @@ class ListToDoRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Get List to-do of an user
+     *
+     * @param User $user user
+     * @param Escape $escape escape
+     *
+     * @return array<ListToDo>
+     */
+    public function getToDoListEscapeWithoutBlockUser(User $user, Escape $escape)
+    {
+        $qb = $this->createQueryBuilder('l')
+                   ->andWhere(":escape = l.escape")
+                   ->setParameter("escape", $escape);
+        foreach ($user->getBlockedBy() as $blocker) {
+            $qb->andWhere(":blocker != l.user")
+            ->setParameter("blocker", $blocker);
+        }
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * check if escape is already in user's to-do list
+     *
+     * @param User $user owner of list
+     * @param Escape $escape escape
+     *
+     * @return ListToDo|null
+     */
     public function isItAlreadyInList(User $user, Escape $escape): ?ListToDo
     {
         return $this->createQueryBuilder('l')

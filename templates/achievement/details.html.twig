@@ -1,0 +1,43 @@
+{% extends "base.html.twig" %}
+
+{% block title %}Details Achievement{% endblock %}
+
+{% block body %}
+<div id="achievement-details" class="container">
+    <section id="nav">
+        <a class="button-action" href='{{ path("admin_achievements_list") }}'>Retour à la liste</a>
+    </section>
+    <section id="sort">
+        <h1>{{ achievement.name }} <span>{{ achievement.conditionType }}</span></h1>
+        <div class="actions">
+            <a class="button-modify" href='{{ path("admin_achievements_edit", {id: achievement.id}) }}'>Modifier</a>
+            <a class="button-delete" href='{{ path("admin_achievements_delete", {id: achievement.id}) }}'>Supprimer</a>
+        </div>
+    </section>
+    <section id="informations">
+        <h2>Informations Globales</h2>
+        <div class="global">
+            <div class="info"><h3>Crée le </h3><div>{{ achievement.createdAt|date("Y-m-d") }}</div></div>
+            <div class="info"><h3>Mis à jour le </h3><div>{{ achievement.updatedAt|date("Y-m-d") }}</div></div>
+            <div class="info"><h3>Type de trophée</h3><div>{{ achievement.tropheeType }}</div></div>
+            <div class="info"><h3>Trophée</h3><div>{{ achievement.trophee }}</div></div>
+            {% if achievement.scalable %}
+                {% if achievement.previousStep is not null %}
+                <div class="info"><h3>Etape precedente</h3><div>{{ achievement.previousStep.name }}</div></div>
+                {% endif %}
+                {% if achievement.nextStep is not null %}
+                <div class="info"><h3>Etape suivante</h3><div>{{ achievement.nextStep.name }}</div></div>
+                {% endif %}
+            {% endif %}
+        </div>
+        <h2>Description</h2>
+        <div class="description">
+            <div class="text">{{ achievement.description }}</div>
+        </div>
+        <h2>Fonction de check</h2>
+        <div class="description">
+            <div class="text">{{ achievement.checker }}</div>
+        </div>
+    </section>
+</div>
+{% endblock %}

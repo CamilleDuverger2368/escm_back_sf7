@@ -18,7 +18,10 @@ class Description
 
     #[ORM\Column(type: Types::TEXT)]
     #[Assert\NotBlank(message:"Description can't be blanck")]
-    #[Groups(["getEscape"])]
+    #[Groups(["getEscape",
+
+              "routeEscape"
+    ])]
     private ?string $description = null;
 
     #[ORM\ManyToOne]
